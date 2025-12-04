@@ -1,0 +1,76 @@
+@model SmmGab.Domain.Models.Channel
+@{
+    ViewData["Title"] = Model.DisplayName;
+}
+
+<h2>@Model.DisplayName</h2>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h4>Информация о канале</h4>
+        <p><strong>Проект:</strong> @Model.Project.Name</p>
+        <p><strong>Тип:</strong> 
+            <span class="badge bg-@(Model.Type == SmmGab.Domain.Enums.ChannelType.Vk ? "primary" : "info")">
+                @Model.Type
+            </span>
+        </p>
+        <p><strong>Внешний ID:</strong> <code>@Model.ExternalId</code></p>
+        @if (!string.IsNullOrEmpty(Model.AuthRef))
+        {
+            <p><strong>Токен авторизации:</strong> 
+                <code style="word-break: break-all;">@(Model.AuthRef.Length > 50 ? Model.AuthRef.Substring(0, 50) + "..." : Model.AuthRef)</code>
+            </p>
+        }
+    </div>
+</div>
+
+<div class="mt-4">
+    <h4>Публикации в этом канале (@Model.PublicationTargets.Count)</h4>
+    @if (Model.PublicationTargets.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Публикация</th>
+                    <th>Статус</th>
+                    <th>Ошибка</th>
+                    <th>Опубликовано</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var target in Model.PublicationTargets.OrderByDescending(t => t.Publication.CreatedAtUtc))
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Publications" asp-action="Details" asp-route-id="@target.Publication.Id">
+                                @target.Publication.Text
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-@(target.Status == SmmGab.Domain.Enums.TargetStatus.Published ? "success" : 
+                                         target.Status == SmmGab.Domain.Enums.TargetStatus.Failed ? "danger" : 
+                                         target.Status == SmmGab.Domain.Enums.TargetStatus.Publishing ? "warning" : "secondary")">
+                                @target.Status
+                            </span>
+                        </td>
+                        <td>@(target.LastError ?? "-")</td>
+                        <td>@(target.PublishedAtUtc?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-muted">Нет публикаций в этом канале</p>
+    }
+</div>
+
+<div class="mt-4">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Редактировать</a>
+    <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот канал?');">
+        <button type="submit" class="btn btn-danger">Удалить</button>
+    </form>
+</div>
+

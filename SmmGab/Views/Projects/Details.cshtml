@@ -1,0 +1,79 @@
+@model SmmGab.Domain.Models.Project
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<h2>@Model.Name</h2>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h4>Информация о проекте</h4>
+        <p><strong>Создан:</strong> @Model.CreatedAtUtc.ToString("dd.MM.yyyy HH:mm")</p>
+        @if (Model.UpdatedAtUtc.HasValue)
+        {
+            <p><strong>Обновлен:</strong> @Model.UpdatedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")</p>
+        }
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h4>Каналы (@Model.Channels.Count)</h4>
+        @if (Model.Channels.Any())
+        {
+            <ul class="list-group">
+                @foreach (var channel in Model.Channels)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <a asp-controller="Channels" asp-action="Details" asp-route-id="@channel.Id">
+                                <strong>@channel.DisplayName</strong>
+                            </a>
+                            <span class="badge bg-@(channel.Type == SmmGab.Domain.Enums.ChannelType.Vk ? "primary" : "info") ms-2">
+                                @channel.Type
+                            </span>
+                            <br />
+                            <small>ID: @channel.ExternalId</small>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted">Нет каналов</p>
+        }
+        <div class="mt-2">
+            <a asp-controller="Channels" asp-action="Create" asp-route-projectId="@Model.Id" class="btn btn-sm btn-outline-primary">Добавить канал</a>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h4>Публикации (@Model.Publications.Count)</h4>
+        @if (Model.Publications.Any())
+        {
+            <ul class="list-group">
+                @foreach (var publication in Model.Publications.OrderByDescending(p => p.CreatedAtUtc).Take(10))
+                {
+                    <li class="list-group-item">
+                        <a asp-controller="Publications" asp-action="Details" asp-route-id="@publication.Id">@publication.Text</a>
+                        <br />
+                        <small>@publication.Status - @publication.CreatedAtUtc.ToString("dd.MM.yyyy")</small>
+                    </li>
+                }
+            </ul>
+            @if (Model.Publications.Count > 10)
+            {
+                <p class="text-muted">Показано 10 из @Model.Publications.Count</p>
+            }
+        }
+        else
+        {
+            <p class="text-muted">Нет публикаций</p>
+        }
+    </div>
+</div>
+
+<div class="mt-4">
+    <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+</div>
+

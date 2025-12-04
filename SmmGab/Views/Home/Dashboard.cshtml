@@ -1,0 +1,342 @@
+@model SmmGab.Domain.Models.Project
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="dashboard-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 fw-bold mb-2">@Model.Name</h1>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-calendar3 me-2"></i>Создан @Model.CreatedAtUtc.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("ru-RU"))
+                </p>
+            </div>
+            <form asp-action="ChangeProject" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Сменить проект
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card bg-primary text-white">
+                <div class="stat-icon">
+                    <i class="bi bi-broadcast"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value">@Model.Channels.Count</h3>
+                    <p class="stat-label mb-0">Каналов</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-success text-white">
+                <div class="stat-icon">
+                    <i class="bi bi-file-post"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value">@Model.Publications.Count</h3>
+                    <p class="stat-label mb-0">Публикаций</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-info text-white">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value">@Model.Publications.Count(p => p.Status == SmmGab.Domain.Enums.PublicationStatus.Published)</h3>
+                    <p class="stat-label mb-0">Опубликовано</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-warning text-white">
+                <div class="stat-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value">@Model.Publications.Count(p => p.Status == SmmGab.Domain.Enums.PublicationStatus.Scheduled)</h3>
+                    <p class="stat-label mb-0">Запланировано</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <a asp-controller="Channels" asp-action="Create" asp-route-projectId="@Model.Id" class="quick-action-card">
+                <div class="quick-action-icon bg-primary">
+                    <i class="bi bi-plus-circle"></i>
+                </div>
+                <div class="quick-action-content">
+                    <h5 class="mb-1">Добавить канал</h5>
+                    <p class="text-muted mb-0 small">Подключите новый канал для публикаций</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Publications" asp-action="Create" asp-route-projectId="@Model.Id" class="quick-action-card">
+                <div class="quick-action-icon bg-success">
+                    <i class="bi bi-file-plus"></i>
+                </div>
+                <div class="quick-action-content">
+                    <h5 class="mb-1">Создать публикацию</h5>
+                    <p class="text-muted mb-0 small">Создайте новую публикацию</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Publications" asp-action="Calendar" asp-route-projectId="@Model.Id" class="quick-action-card">
+                <div class="quick-action-icon bg-info">
+                    <i class="bi bi-calendar3"></i>
+                </div>
+                <div class="quick-action-content">
+                    <h5 class="mb-1">Календарь</h5>
+                    <p class="text-muted mb-0 small">Просмотр запланированных публикаций</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-4">
+        <!-- Channels Section -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 fw-bold">
+                            <i class="bi bi-broadcast me-2 text-primary"></i>Каналы
+                        </h5>
+                        <a asp-controller="Channels" asp-action="Index" asp-route-projectId="@Model.Id" class="btn btn-sm btn-link text-decoration-none">
+                            Все каналы <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.Channels.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var channel in Model.Channels.Take(5))
+                            {
+                                <div class="list-group-item border-0 px-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="channel-badge me-3">
+                                            @if (channel.Type == SmmGab.Domain.Enums.ChannelType.Vk)
+                                            {
+                                                <span class="badge bg-primary">VK</span>
+                                            }
+                                            else if (channel.Type == SmmGab.Domain.Enums.ChannelType.Telegram)
+                                            {
+                                                <span class="badge bg-info">TG</span>
+                                            }
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">@channel.DisplayName</h6>
+                                            <small class="text-muted">@channel.ExternalId</small>
+                                        </div>
+                                        <a asp-controller="Channels" asp-action="Details" asp-route-id="@channel.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        @if (Model.Channels.Count > 5)
+                        {
+                            <div class="text-center mt-3">
+                                <a asp-controller="Channels" asp-action="Index" asp-route-projectId="@Model.Id" class="btn btn-sm btn-outline-primary">
+                                    Показать все (@Model.Channels.Count)
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-broadcast display-4 text-muted"></i>
+                            <p class="text-muted mt-3 mb-0">Нет каналов</p>
+                            <a asp-controller="Channels" asp-action="Create" asp-route-projectId="@Model.Id" class="btn btn-sm btn-primary mt-2">
+                                Добавить канал
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Publications Section -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 fw-bold">
+                            <i class="bi bi-file-post me-2 text-success"></i>Последние публикации
+                        </h5>
+                        <a asp-controller="Publications" asp-action="Index" asp-route-projectId="@Model.Id" class="btn btn-sm btn-link text-decoration-none">
+                            Все публикации <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.RecentPublications != null && ((List<SmmGab.Domain.Models.Publication>)ViewBag.RecentPublications).Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var publication in (List<SmmGab.Domain.Models.Publication>)ViewBag.RecentPublications)
+                            {
+                                <div class="list-group-item border-0 px-0">
+                                    <div class="d-flex align-items-start">
+                                        <div class="publication-status me-3">
+                                            @{
+                                                var statusClass = publication.Status switch
+                                                {
+                                                    SmmGab.Domain.Enums.PublicationStatus.Published => "bg-success",
+                                                    SmmGab.Domain.Enums.PublicationStatus.Scheduled => "bg-warning",
+                                                    SmmGab.Domain.Enums.PublicationStatus.Publishing => "bg-info",
+                                                    SmmGab.Domain.Enums.PublicationStatus.Failed => "bg-danger",
+                                                    _ => "bg-secondary"
+                                                };
+                                            }
+                                            <span class="badge @statusClass">@publication.Status</span>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">@(publication.Text.Length > 50 ? publication.Text.Substring(0, 50) + "..." : publication.Text)</h6>
+                                            <small class="text-muted">
+                                                @publication.CreatedAtUtc.ToString("dd.MM.yyyy HH:mm")
+                                                @if (publication.Targets.Any())
+                                                {
+                                                    <span class="ms-2">
+                                                        <i class="bi bi-broadcast"></i> @publication.Targets.Count
+                                                    </span>
+                                                }
+                                            </small>
+                                        </div>
+                                        <a asp-controller="Publications" asp-action="Details" asp-route-id="@publication.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-file-post display-4 text-muted"></i>
+                            <p class="text-muted mt-3 mb-0">Нет публикаций</p>
+                            <a asp-controller="Publications" asp-action="Create" asp-route-projectId="@Model.Id" class="btn btn-sm btn-success mt-2">
+                                Создать публикацию
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .dashboard-header {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 1rem;
+        color: white;
+    }
+
+    .stat-card {
+        border-radius: 1rem;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        margin-right: 1rem;
+        opacity: 0.9;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+
+    .quick-action-card {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 1rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .quick-action-card:hover {
+        border-color: #667eea;
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .quick-action-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .channel-badge, .publication-status {
+        min-width: 50px;
+    }
+
+    .card {
+        border-radius: 1rem;
+    }
+
+    .card-header {
+        padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+</style>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+

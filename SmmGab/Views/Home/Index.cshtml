@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Главная";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Добро пожаловать в SMM Planner</h1>
+    <p class="lead">Система планирования публикаций в социальных сетях</p>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Проекты</h5>
+                <p class="card-text">Управляйте своими проектами и каналами</p>
+                <a asp-controller="Projects" asp-action="Index" class="btn btn-primary">Перейти к проектам</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Публикации</h5>
+                <p class="card-text">Создавайте и планируйте публикации</p>
+                <a asp-controller="Publications" asp-action="Index" class="btn btn-primary">Перейти к публикациям</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Календарь</h5>
+                <p class="card-text">Просматривайте запланированные публикации</p>
+                <a asp-controller="Publications" asp-action="Calendar" class="btn btn-primary">Открыть календарь</a>
+            </div>
+        </div>
+    </div>
+</div>
+

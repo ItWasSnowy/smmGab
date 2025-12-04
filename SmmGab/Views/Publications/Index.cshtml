@@ -1,0 +1,53 @@
+@model IEnumerable<SmmGab.Domain.Models.Publication>
+@{
+    ViewData["Title"] = "Публикации";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Публикации</h2>
+    <a asp-controller="Publications" asp-action="Create" class="btn btn-primary">Создать публикацию</a>
+</div>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Проект</th>
+                    <th>Статус</th>
+                    <th>Запланировано</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var publication in Model)
+                {
+                    <tr>
+                        <td>@publication.Text</td>
+                        <td>@publication.Project.Name</td>
+                        <td>
+                            <span class="badge bg-@(publication.Status == SmmGab.Domain.Enums.PublicationStatus.Published ? "success" : 
+                                                      publication.Status == SmmGab.Domain.Enums.PublicationStatus.Failed ? "danger" : 
+                                                      publication.Status == SmmGab.Domain.Enums.PublicationStatus.Publishing ? "warning" : "secondary")">
+                                @publication.Status
+                            </span>
+                        </td>
+                        <td>@(publication.ScheduledAtUtc?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
+                        <td>
+                            <a asp-controller="Publications" asp-action="Details" asp-route-id="@publication.Id" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        У вас пока нет публикаций. <a asp-controller="Publications" asp-action="Create">Создайте первую публикацию</a>.
+    </div>
+}
+

@@ -1,0 +1,86 @@
+@model SmmGab.Controllers.EditChannelViewModel
+@{
+    ViewData["Title"] = "Редактировать канал";
+}
+
+<h2>Редактировать канал</h2>
+
+<form asp-action="Edit" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    
+    <input type="hidden" asp-for="Id" />
+    
+    <div class="form-group mb-3">
+        <label asp-for="ProjectId"></label>
+        <select asp-for="ProjectId" asp-items="ViewBag.Projects" class="form-select">
+            <option value="">-- Выберите проект --</option>
+        </select>
+        <span asp-validation-for="ProjectId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="DisplayName"></label>
+        <input asp-for="DisplayName" class="form-control" placeholder="Название канала" />
+        <span asp-validation-for="DisplayName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Type"></label>
+        <select asp-for="Type" class="form-select" id="channelType">
+            <option value="1">ВКонтакте</option>
+            <option value="2">Telegram</option>
+        </select>
+        <span asp-validation-for="Type" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="ExternalId"></label>
+        <input asp-for="ExternalId" class="form-control" id="externalId" placeholder="ID группы/канала" />
+        <small class="form-text text-muted" id="externalIdHelp">
+            Для ВК: ID группы (например, -123456789)<br />
+            Для Telegram: ID канала или username (например, @@my_channel или -1001234567890)
+        </small>
+        <span asp-validation-for="ExternalId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="AuthRef"></label>
+        <textarea asp-for="AuthRef" class="form-control" rows="3" id="authRef" placeholder="Токен авторизации"></textarea>
+        <small class="form-text text-muted" id="authRefHelp">
+            Для ВК: JSON с токеном {"token": "ваш_токен"}<br />
+            Для Telegram: Bot token (например, 123456789:ABCdefGHIjklMNOpqrsTUVwxyz)
+        </small>
+        <span asp-validation-for="AuthRef" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.getElementById('channelType').addEventListener('change', function() {
+            var type = parseInt(this.value);
+            var externalIdHelp = document.getElementById('externalIdHelp');
+            var authRefHelp = document.getElementById('authRefHelp');
+            var authRef = document.getElementById('authRef');
+            
+            if (type === 1) { // VK
+                externalIdHelp.innerHTML = 'Для ВК: ID группы (например, -123456789)';
+                authRefHelp.innerHTML = 'Для ВК: JSON с токеном {"token": "ваш_токен"}';
+                authRef.placeholder = '{"token": "ваш_токен"}';
+            } else { // Telegram
+                externalIdHelp.innerHTML = 'Для Telegram: ID канала или username (например, @@my_channel или -1001234567890)';
+                authRefHelp.innerHTML = 'Для Telegram: Bot token (например, 123456789:ABCdefGHIjklMNOpqrsTUVwxyz)';
+                authRef.placeholder = '123456789:ABCdefGHIjklMNOpqrsTUVwxyz';
+            }
+        });
+        
+        // Инициализация при загрузке страницы
+        document.getElementById('channelType').dispatchEvent(new Event('change'));
+    </script>
+}
+

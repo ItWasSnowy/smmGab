@@ -1,0 +1,111 @@
+@model SmmGab.Controllers.CreatePublicationViewModel
+@{
+    ViewData["Title"] = "Создать публикацию";
+    var projects = ViewBag.Projects as List<SmmGab.Domain.Models.Project> ?? new List<SmmGab.Domain.Models.Project>();
+    var channels = ViewBag.Channels as List<SmmGab.Domain.Models.Channel> ?? new List<SmmGab.Domain.Models.Channel>();
+}
+
+<h2>Создать публикацию</h2>
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    
+    <div class="form-group mb-3">
+        <label asp-for="ProjectId"></label>
+        <select asp-for="ProjectId" class="form-select" id="projectSelect">
+            <option value="">-- Выберите проект --</option>
+            @foreach (var project in projects)
+            {
+                <option value="@project.Id">@project.Name</option>
+            }
+        </select>
+        <span asp-validation-for="ProjectId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Text"></label>
+        <input asp-for="Text" class="form-control" placeholder="Название публикации" />
+        <span asp-validation-for="Text" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="DeltaQuill"></label>
+        <textarea asp-for="DeltaQuill" class="form-control" rows="10" placeholder="Текст публикации (можно использовать DeltaQuill формат)"></textarea>
+        <span asp-validation-for="DeltaQuill" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="ChannelIds"></label>
+        <select asp-for="ChannelIds" class="form-select" multiple id="channelSelect">
+            @foreach (var channel in channels)
+            {
+                <option value="@channel.Id" data-project-id="@channel.ProjectId">@channel.DisplayName (@channel.Type) - @channel.Project.Name</option>
+            }
+        </select>
+        <small class="form-text text-muted">Выберите каналы для публикации (удерживайте Ctrl для множественного выбора)</small>
+        <span asp-validation-for="ChannelIds" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <div class="form-check">
+            <input asp-for="IsPublish" class="form-check-input" type="checkbox" id="isPublish" />
+            <label class="form-check-label" for="isPublish">
+                Опубликовать
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group mb-3">
+        <div class="form-check">
+            <input asp-for="IsNow" class="form-check-input" type="checkbox" id="isNow" />
+            <label class="form-check-label" for="isNow">
+                Опубликовать немедленно
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group mb-3">
+        <div class="form-check">
+            <input asp-for="IsLater" class="form-check-input" type="checkbox" id="isLater" />
+            <label class="form-check-label" for="isLater">
+                Запланировать публикацию
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group mb-3" id="scheduledDateGroup" style="display: none;">
+        <label asp-for="ScheduledAtUtc"></label>
+        <input asp-for="ScheduledAtUtc" type="datetime-local" class="form-control" />
+        <span asp-validation-for="ScheduledAtUtc" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Создать</button>
+        <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.getElementById('isLater').addEventListener('change', function() {
+            document.getElementById('scheduledDateGroup').style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('projectSelect').addEventListener('change', function() {
+            var projectId = this.value;
+            var channelSelect = document.getElementById('channelSelect');
+            
+            for (var i = 0; i < channelSelect.options.length; i++) {
+                var option = channelSelect.options[i];
+                if (projectId === '' || option.getAttribute('data-project-id') === projectId) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                    option.selected = false;
+                }
+            }
+        });
+    </script>
+}
+

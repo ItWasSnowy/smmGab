@@ -1,0 +1,36 @@
+@model IEnumerable<SmmGab.Domain.Models.Project>
+@{
+    ViewData["Title"] = "Проекты";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Проекты</h2>
+    <a asp-controller="Projects" asp-action="Create" class="btn btn-primary">Создать проект</a>
+</div>
+
+@if (Model.Any())
+{
+    <div class="row">
+        @foreach (var project in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@project.Name</h5>
+                        <p class="card-text">
+                            <small class="text-muted">Создан: @project.CreatedAtUtc.ToString("dd.MM.yyyy")</small>
+                        </p>
+                        <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        У вас пока нет проектов. <a asp-controller="Projects" asp-action="Create">Создайте первый проект</a>.
+    </div>
+}
+

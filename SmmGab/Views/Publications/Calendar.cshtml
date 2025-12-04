@@ -1,0 +1,81 @@
+@model IEnumerable<SmmGab.Domain.Models.Publication>
+@{
+    ViewData["Title"] = "Календарь публикаций";
+    var year = ViewBag.Year as int? ?? DateTime.UtcNow.Year;
+    var month = ViewBag.Month as int? ?? DateTime.UtcNow.Month;
+    var startDate = ViewBag.StartDate as DateTime? ?? new DateTime(year, month, 1);
+    var daysInMonth = DateTime.DaysInMonth(year, month);
+    var firstDayOfWeek = (int)startDate.DayOfWeek;
+    if (firstDayOfWeek == 0) firstDayOfWeek = 7; // Понедельник = 1
+    firstDayOfWeek--; // Для отображения понедельника как первого дня
+}
+
+<h2>Календарь публикаций - @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month) @year</h2>
+
+<div class="d-flex justify-content-between mb-3">
+    <a asp-controller="Publications" asp-action="Calendar" asp-route-year="@(month == 1 ? year - 1 : year)" asp-route-month="@(month == 1 ? 12 : month - 1)" class="btn btn-outline-primary">← Предыдущий месяц</a>
+    <a asp-controller="Publications" asp-action="Calendar" asp-route-year="@(month == 12 ? year + 1 : year)" asp-route-month="@(month == 12 ? 1 : month + 1)" class="btn btn-outline-primary">Следующий месяц →</a>
+</div>
+
+<div class="calendar">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Пн</th>
+                <th>Вт</th>
+                <th>Ср</th>
+                <th>Чт</th>
+                <th>Пт</th>
+                <th>Сб</th>
+                <th>Вс</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var day = 1;
+                var publicationsByDay = Model.GroupBy(p => p.ScheduledAtUtc?.Day ?? 0).ToDictionary(g => g.Key, g => g.ToList());
+            }
+            @for (int week = 0; week < 6; week++)
+            {
+                <tr>
+                    @for (int dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++)
+                    {
+                        <td style="height: 100px; vertical-align: top;">
+                            @if (week == 0 && dayOfWeek < firstDayOfWeek)
+                            {
+                                <span class="text-muted"></span>
+                            }
+                            else if (day <= daysInMonth)
+                            {
+                                <strong>@day</strong>
+                                @if (publicationsByDay.ContainsKey(day))
+                                {
+                                    <div class="mt-2">
+                                        @foreach (var pub in publicationsByDay[day])
+                                        {
+                                            <div class="badge bg-primary mb-1" style="font-size: 0.7em; display: block;">
+                                                @pub.Text
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                day++;
+                            }
+                        </td>
+                    }
+                </tr>
+                @if (day > daysInMonth) break;
+            }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .calendar table {
+        width: 100%;
+    }
+    .calendar td {
+        width: 14.28%;
+    }
+</style>
+
