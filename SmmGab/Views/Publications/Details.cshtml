@@ -5,112 +5,191 @@
 
 <h2>@Model.Text</h2>
 
-<div class="row mt-4">
-    <div class="col-md-6">
-        <h4>Информация о публикации</h4>
-        <p><strong>Проект:</strong> @Model.Project.Name</p>
-        <p><strong>Статус:</strong> 
-            <span class="badge bg-@(Model.Status == SmmGab.Domain.Enums.PublicationStatus.Published ? "success" : 
-                                 Model.Status == SmmGab.Domain.Enums.PublicationStatus.Failed ? "danger" : 
-                                 Model.Status == SmmGab.Domain.Enums.PublicationStatus.Publishing ? "warning" : "secondary")">
-                @Model.Status
-            </span>
-        </p>
-        <p><strong>Создана:</strong> @Model.CreatedAtUtc.ToString("dd.MM.yyyy HH:mm")</p>
-        @if (Model.ScheduledAtUtc.HasValue)
-        {
-            <p><strong>Запланирована на:</strong> @Model.ScheduledAtUtc.Value.ToString("dd.MM.yyyy HH:mm")</p>
-        }
-        @if (Model.PublishedAtUtc.HasValue)
-        {
-            <p><strong>Опубликована:</strong> @Model.PublishedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")</p>
-        }
-    </div>
-</div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-info-circle me-2 text-primary"></i>Информация о публикации
+                    </h5>
+                    <div class="mb-3">
+                        <strong>Проект:</strong> 
+                        <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectId" class="text-decoration-none">
+                            @Model.Project.Name
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Создана:</strong> @Model.CreatedAtUtc.ToString("dd.MM.yyyy HH:mm")
+                    </div>
+                    @if (Model.ScheduledAtUtc.HasValue)
+                    {
+                        <div class="mb-3">
+                            <strong>Запланирована на:</strong> @Model.ScheduledAtUtc.Value.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                    }
+                    @if (Model.PublishedAtUtc.HasValue)
+                    {
+                        <div class="mb-3">
+                            <strong>Опубликована:</strong> @Model.PublishedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                    }
+                </div>
+            </div>
 
-@if (!string.IsNullOrEmpty(Model.DeltaQuill))
+            @if (!string.IsNullOrEmpty(Model.DeltaQuill))
+            {
+                <div class="mt-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-file-text me-2 text-primary"></i>Содержание
+                    </h5>
+                    <div class="border rounded p-3 bg-light">
+                        <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">@Model.DeltaQuill</pre>
+                    </div>
+                </div>
+            }
+
+            <div class="mt-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-broadcast me-2 text-primary"></i>Цели публикации (@Model.Targets.Count)
+                </h5>
+                @if (Model.Targets.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Канал</th>
+                                    <th>Тип</th>
+                                    <th>Статус</th>
+                                    <th>Ошибка</th>
+                                    <th>Опубликовано</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var target in Model.Targets)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="Channels" asp-action="Details" asp-route-id="@target.ChannelId" class="text-decoration-none">
+                                                @target.Channel.DisplayName
+                                            </a>
+                                        </td>
+                                        <td>
+                                            @if (target.ChannelType == SmmGab.Domain.Enums.ChannelType.Vk)
+                                            {
+                                                <span class="badge bg-primary">VK</span>
+                                            }
+                                            else if (target.ChannelType == SmmGab.Domain.Enums.ChannelType.Telegram)
+                                            {
+                                                <span class="badge bg-info">Telegram</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@(target.Status == SmmGab.Domain.Enums.TargetStatus.Published ? "success" : 
+                                                     target.Status == SmmGab.Domain.Enums.TargetStatus.Failed ? "danger" : 
+                                                     target.Status == SmmGab.Domain.Enums.TargetStatus.Publishing ? "warning" : "secondary")">
+                                                @target.Status
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(target.LastError))
+                                            {
+                                                <span class="text-danger" title="@target.LastError" style="max-width: 300px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                    @target.LastError
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <text>-</text>
+                                            }
+                                        </td>
+                                        <td>@(target.PublishedAtUtc?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">Нет целей публикации</p>
+                }
+            </div>
+
+@if (Model.Files != null && Model.Files.Any())
 {
-    <div class="mt-4">
-        <h4>Содержание</h4>
-        <div class="border p-3">
-            <pre>@Model.DeltaQuill</pre>
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white border-0">
+            <h5 class="card-title mb-0 fw-bold">
+                <i class="bi bi-images me-2 text-primary"></i>Медиа файлы (@Model.Files.Count)
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                @foreach (var file in Model.Files)
+                {
+                    <div class="col-md-3 col-sm-4 col-6">
+                        <div class="card border file-card h-100">
+                            @if (file.Type == SmmGab.Domain.Enums.FileType.Image)
+                            {
+                                <a href="/api/files/@file.Id/download" target="_blank" class="text-decoration-none">
+                                    <img src="/api/files/@file.Id/download" class="card-img-top" style="height: 200px; object-fit: cover; cursor: pointer;" alt="@file.StoredFileName">
+                                </a>
+                            }
+                            else if (file.Type == SmmGab.Domain.Enums.FileType.Video)
+                            {
+                                <a href="/api/files/@file.Id/download" target="_blank" class="text-decoration-none">
+                                    <div class="card-img-top bg-dark d-flex align-items-center justify-content-center" style="height: 200px; cursor: pointer;">
+                                        <i class="bi bi-play-circle text-white" style="font-size: 4rem;"></i>
+                                    </div>
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="/api/files/@file.Id/download" target="_blank" class="text-decoration-none">
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px; cursor: pointer;">
+                                        <i class="bi bi-file-earmark text-primary" style="font-size: 4rem;"></i>
+                                    </div>
+                                </a>
+                            }
+                            <div class="card-body p-2">
+                                <small class="text-muted d-block text-truncate" title="@file.StoredFileName">@file.StoredFileName</small>
+                                <small class="text-muted">
+                                    @(file.FileSizeBytes / 1024.0 / 1024.0 < 1 ? $"{file.FileSizeBytes / 1024.0:F2} KB" : $"{file.FileSizeBytes / 1024.0 / 1024.0:F2} MB")
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 }
 
-<div class="mt-4">
-    <h4>Цели публикации (@Model.Targets.Count)</h4>
-    @if (Model.Targets.Any())
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Канал</th>
-                    <th>Тип</th>
-                    <th>Статус</th>
-                    <th>Ошибка</th>
-                    <th>Опубликовано</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var target in Model.Targets)
+            <div class="mt-4 d-flex gap-2">
+                @if (Model.Status == SmmGab.Domain.Enums.PublicationStatus.Scheduled || Model.Status == SmmGab.Domain.Enums.PublicationStatus.Draft)
                 {
-                    <tr>
-                        <td>@target.Channel.DisplayName</td>
-                        <td>@target.ChannelType</td>
-                        <td>
-                            <span class="badge bg-@(target.Status == SmmGab.Domain.Enums.TargetStatus.Published ? "success" : 
-                                         target.Status == SmmGab.Domain.Enums.TargetStatus.Failed ? "danger" : 
-                                         target.Status == SmmGab.Domain.Enums.TargetStatus.Publishing ? "warning" : "secondary")">
-                                @target.Status
-                            </span>
-                        </td>
-                        <td>
-                            @if (!string.IsNullOrEmpty(target.LastError))
-                            {
-                                <span class="text-danger" title="@target.LastError">@target.LastError</span>
-                            }
-                            else
-                            {
-                                <text>-</text>
-                            }
-                        </td>
-                        <td>@(target.PublishedAtUtc?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
-                    </tr>
+                    <form asp-action="PublishNow" asp-route-id="@Model.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-2"></i>Опубликовать сейчас
+                        </button>
+                    </form>
                 }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <p class="text-muted">Нет целей публикации</p>
-    }
-</div>
-
-@if (Model.Files.Any())
-{
-    <div class="mt-4">
-        <h4>Файлы (@Model.Files.Count)</h4>
-        <ul class="list-group">
-            @foreach (var file in Model.Files)
-            {
-                <li class="list-group-item">
-                    <a href="/api/files/@file.Id/download" target="_blank">@file.StoredFileName</a>
-                    <small class="text-muted">(@file.FileSizeBytes bytes, @file.ContentType)</small>
-                </li>
-            }
-        </ul>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Назад к списку
+                </a>
+            </div>
+        </div>
     </div>
-}
-
-<div class="mt-4">
-    @if (Model.Status == SmmGab.Domain.Enums.PublicationStatus.Scheduled || Model.Status == SmmGab.Domain.Enums.PublicationStatus.Draft)
-    {
-        <form asp-action="PublishNow" asp-route-id="@Model.Id" method="post" class="d-inline">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-primary">Опубликовать сейчас</button>
-        </form>
-    }
-    <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
 </div>
+
+<style>
+    .file-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .file-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
 

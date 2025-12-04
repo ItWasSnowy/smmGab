@@ -1,111 +1,524 @@
 @model SmmGab.Controllers.CreatePublicationViewModel
 @{
     ViewData["Title"] = "Создать публикацию";
-    var projects = ViewBag.Projects as List<SmmGab.Domain.Models.Project> ?? new List<SmmGab.Domain.Models.Project>();
+    var project = ViewBag.Project as SmmGab.Domain.Models.Project;
     var channels = ViewBag.Channels as List<SmmGab.Domain.Models.Channel> ?? new List<SmmGab.Domain.Models.Channel>();
 }
 
-<h2>Создать публикацию</h2>
+<div class="publication-editor-container">
+    <div class="row g-0 h-100">
+        <!-- Left Sidebar - Settings -->
+        <div class="col-lg-4 publication-sidebar">
+            <div class="sidebar-content">
+                <!-- Header -->
+                <div class="sidebar-header mb-4">
+                    <a asp-controller="Home" asp-action="Dashboard" asp-route-id="@ViewBag.Project?.Id" class="btn btn-link text-decoration-none text-white p-0 mb-2">
+                        <i class="bi bi-arrow-left fs-5"></i>
+                    </a>
+                    <h3 class="text-white mb-0 fw-bold">Редактирование статьи</h3>
+                </div>
 
-<form asp-action="Create" method="post">
-    <div asp-validation-summary="All" class="text-danger"></div>
-    
-    <div class="form-group mb-3">
-        <label asp-for="ProjectId"></label>
-        <select asp-for="ProjectId" class="form-select" id="projectSelect">
-            <option value="">-- Выберите проект --</option>
-            @foreach (var project in projects)
-            {
-                <option value="@project.Id">@project.Name</option>
-            }
-        </select>
-        <span asp-validation-for="ProjectId" class="text-danger"></span>
-    </div>
+                <form asp-action="Create" method="post" enctype="multipart/form-data" id="publicationForm">
+                    <div asp-validation-summary="All" class="alert alert-danger"></div>
 
-    <div class="form-group mb-3">
-        <label asp-for="Text"></label>
-        <input asp-for="Text" class="form-control" placeholder="Название публикации" />
-        <span asp-validation-for="Text" class="text-danger"></span>
-    </div>
+                    <!-- Основные настройки -->
+                    <div class="settings-section mb-4">
+                        <div class="section-header mb-3">
+                            <i class="bi bi-gear me-2"></i>
+                            <span class="fw-semibold">Основные настройки</span>
+                        </div>
+                        @if (ViewBag.Project != null)
+                        {
+                            <div class="form-group mb-3">
+                                <label class="form-label small text-muted">Проект</label>
+                                <div class="form-control form-control-sm bg-light" style="border: none;">
+                                    <i class="bi bi-folder me-2"></i>@ViewBag.Project.Name
+                                </div>
+                            </div>
+                        }
+                        <div class="form-group mb-3">
+                            <label asp-for="Text" class="form-label small text-muted">Название статьи</label>
+                            <input asp-for="Text" class="form-control form-control-sm" placeholder="Новая публикация" />
+                            <span asp-validation-for="Text" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden input for ProjectId -->
+                    <input type="hidden" asp-for="ProjectId" />
 
-    <div class="form-group mb-3">
-        <label asp-for="DeltaQuill"></label>
-        <textarea asp-for="DeltaQuill" class="form-control" rows="10" placeholder="Текст публикации (можно использовать DeltaQuill формат)"></textarea>
-        <span asp-validation-for="DeltaQuill" class="text-danger"></span>
-    </div>
+                    <!-- Статус публикации -->
+                    <div class="settings-section mb-4">
+                        <div class="section-header mb-3">
+                            <i class="bi bi-circle-fill me-2" style="font-size: 0.5rem;"></i>
+                            <span class="fw-semibold">Статус публикации</span>
+                        </div>
+                        <div class="status-box">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-pencil me-2"></i>
+                                <span>Черновик</span>
+                            </div>
+                        </div>
+                    </div>
 
-    <div class="form-group mb-3">
-        <label asp-for="ChannelIds"></label>
-        <select asp-for="ChannelIds" class="form-select" multiple id="channelSelect">
-            @foreach (var channel in channels)
-            {
-                <option value="@channel.Id" data-project-id="@channel.ProjectId">@channel.DisplayName (@channel.Type) - @channel.Project.Name</option>
-            }
-        </select>
-        <small class="form-text text-muted">Выберите каналы для публикации (удерживайте Ctrl для множественного выбора)</small>
-        <span asp-validation-for="ChannelIds" class="text-danger"></span>
-    </div>
+                    <!-- Планирование публикации -->
+                    <div class="settings-section mb-4">
+                        <div class="section-header mb-3">
+                            <i class="bi bi-clock me-2"></i>
+                            <span class="fw-semibold">Планирование публикации</span>
+                        </div>
+                        <div class="toggle-options d-flex flex-column gap-2">
+                            <label class="toggle-option @(Model.IsNow ? "active" : "")">
+                                <input type="checkbox" asp-for="IsNow" class="form-check-input" />
+                                Отправить немедленно
+                            </label>
+                            <label class="toggle-option @(Model.IsLater ? "active" : "")">
+                                <input type="checkbox" asp-for="IsLater" class="form-check-input" />
+                                Запланировать
+                            </label>
+                        </div>
+                        <div class="form-group mt-3" id="scheduledDateGroup" style="display: @(Model.IsLater ? "block" : "none");">
+                            <label asp-for="ScheduledAtUtc" class="form-label small text-muted"></label>
+                            <input asp-for="ScheduledAtUtc" type="datetime-local" class="form-control form-control-sm" />
+                            <span asp-validation-for="ScheduledAtUtc" class="text-danger small"></span>
+                        </div>
+                    </div>
 
-    <div class="form-group mb-3">
-        <div class="form-check">
-            <input asp-for="IsPublish" class="form-check-input" type="checkbox" id="isPublish" />
-            <label class="form-check-label" for="isPublish">
-                Опубликовать
-            </label>
+                    <!-- Каналы для публикации -->
+                    <div class="settings-section mb-4">
+                        <div class="section-header mb-3">
+                            <i class="bi bi-broadcast me-2"></i>
+                            <span class="fw-semibold">Каналы для публикации</span>
+                        </div>
+                        <div class="channels-list">
+                            @foreach (var channel in channels)
+                            {
+                                <div class="channel-item" data-project-id="@channel.ProjectId">
+                                    <div class="d-flex align-items-center">
+                                        @if (channel.Type == SmmGab.Domain.Enums.ChannelType.Vk)
+                                        {
+                                            <i class="bi bi-chat-dots-fill text-primary me-2"></i>
+                                        }
+                                        else if (channel.Type == SmmGab.Domain.Enums.ChannelType.Telegram)
+                                        {
+                                            <i class="bi bi-telegram text-info me-2"></i>
+                                        }
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold small">@channel.DisplayName</div>
+                                            <div class="text-muted" style="font-size: 0.75rem;">@channel.Type</div>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input channel-checkbox" type="checkbox" 
+                                               name="ChannelIds" value="@channel.Id" 
+                                               id="channel_@channel.Id" />
+                                    </div>
+                                </div>
+                            }
+                            @if (!channels.Any())
+                            {
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-broadcast display-6"></i>
+                                    <p class="small mt-2 mb-0">Нет доступных каналов</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Hidden inputs -->
+                    <input type="hidden" asp-for="IsPublish" value="true" />
+                    <input type="hidden" asp-for="UploadedFileIds" id="uploadedFileIds" />
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Content Area - Editor -->
+        <div class="col-lg-8 publication-editor">
+            <div class="editor-content">
+                <!-- Action Buttons -->
+                <div class="editor-header mb-3">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-success" onclick="saveAsDraft()">
+                            <i class="bi bi-check-circle me-2"></i>Сохранить как черновик
+                        </button>
+                        <button type="submit" form="publicationForm" class="btn btn-primary">
+                            <i class="bi bi-send me-2"></i>Опубликовать
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Editor -->
+                <div class="editor-main">
+                    <label asp-for="Body" class="form-label small fw-semibold mb-2">
+                        <i class="bi bi-text-paragraph me-2"></i>Текст публикации
+                    </label>
+                    <textarea asp-for="Body" class="form-control" rows="15" placeholder="Введите текст публикации..."></textarea>
+                    <span asp-validation-for="Body" class="text-danger"></span>
+                </div>
+
+                <!-- Media Upload Section -->
+                <div class="media-upload-section mt-3">
+                    <label class="form-label small fw-semibold mb-2">
+                        <i class="bi bi-images me-2"></i>Медиа файлы
+                    </label>
+                    <div class="border rounded p-3 bg-light">
+                        <input type="file" class="form-control form-control-sm" id="mediaFiles" 
+                               name="MediaFiles" multiple accept="image/*,video/*,.pdf" />
+                        <small class="form-text text-muted">
+                            Поддерживаемые форматы: JPG, PNG, GIF, WebP, MP4, AVI, MOV, PDF (макс. 2GB)
+                        </small>
+                        
+                        <!-- Upload Progress -->
+                        <div id="uploadProgress" class="progress mt-2" style="display: none;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                        </div>
+
+                        <!-- Uploaded Files Preview -->
+                        <div id="uploadedFilesPreview" class="row g-2 mt-2"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="form-group mb-3">
-        <div class="form-check">
-            <input asp-for="IsNow" class="form-check-input" type="checkbox" id="isNow" />
-            <label class="form-check-label" for="isNow">
-                Опубликовать немедленно
-            </label>
-        </div>
-    </div>
-
-    <div class="form-group mb-3">
-        <div class="form-check">
-            <input asp-for="IsLater" class="form-check-input" type="checkbox" id="isLater" />
-            <label class="form-check-label" for="isLater">
-                Запланировать публикацию
-            </label>
-        </div>
-    </div>
-
-    <div class="form-group mb-3" id="scheduledDateGroup" style="display: none;">
-        <label asp-for="ScheduledAtUtc"></label>
-        <input asp-for="ScheduledAtUtc" type="datetime-local" class="form-control" />
-        <span asp-validation-for="ScheduledAtUtc" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Создать</button>
-        <a asp-action="Index" class="btn btn-secondary">Отмена</a>
-    </div>
-</form>
+</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        document.getElementById('isLater').addEventListener('change', function() {
+        const uploadedFileIds = [];
+        
+        // Toggle scheduled date
+        document.getElementById('isLater')?.addEventListener('change', function() {
             document.getElementById('scheduledDateGroup').style.display = this.checked ? 'block' : 'none';
-        });
-
-        document.getElementById('projectSelect').addEventListener('change', function() {
-            var projectId = this.value;
-            var channelSelect = document.getElementById('channelSelect');
-            
-            for (var i = 0; i < channelSelect.options.length; i++) {
-                var option = channelSelect.options[i];
-                if (projectId === '' || option.getAttribute('data-project-id') === projectId) {
-                    option.style.display = '';
-                } else {
-                    option.style.display = 'none';
-                    option.selected = false;
-                }
+            if (this.checked) {
+                document.getElementById('isNow').checked = false;
             }
         });
-    </script>
-}
 
+        document.getElementById('isNow')?.addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('isLater').checked = false;
+                document.getElementById('scheduledDateGroup').style.display = 'none';
+            }
+        });
+
+        // Update toggle option styles
+        document.querySelectorAll('.toggle-option').forEach(option => {
+            const checkbox = option.querySelector('input[type="checkbox"]');
+            checkbox?.addEventListener('change', function() {
+                if (this.checked) {
+                    option.classList.add('active');
+                    // Uncheck the other option
+                    const otherOption = option.closest('.toggle-options')?.querySelector('.toggle-option:not(.active)');
+                    if (otherOption) {
+                        const otherCheckbox = otherOption.querySelector('input[type="checkbox"]');
+                        if (otherCheckbox) {
+                            otherCheckbox.checked = false;
+                            otherOption.classList.remove('active');
+                        }
+                    }
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+        });
+
+        // Handle file upload
+        document.getElementById('mediaFiles')?.addEventListener('change', async function(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            const progressBar = document.getElementById('uploadProgress');
+            const progressBarFill = progressBar?.querySelector('.progress-bar');
+            const previewContainer = document.getElementById('uploadedFilesPreview');
+            
+            if (progressBar) progressBar.style.display = 'block';
+            if (progressBarFill) progressBarFill.style.width = '0%';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    if (progressBarFill) {
+                        progressBarFill.style.width = `${((i + 1) / files.length) * 100}%`;
+                    }
+                    
+                    const response = await fetch('/api/files/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки файла');
+                    }
+
+                    const fileData = await response.json();
+                    uploadedFileIds.push(fileData.id);
+                    const uploadedFileIdsInput = document.getElementById('uploadedFileIds');
+                    if (uploadedFileIdsInput) {
+                        uploadedFileIdsInput.value = uploadedFileIds.join(',');
+                    }
+
+                    addFilePreview(fileData, file);
+                } catch (error) {
+                    console.error('Error uploading file:', error);
+                    alert(`Ошибка загрузки файла ${file.name}: ${error.message}`);
+                }
+            }
+
+            if (progressBar) progressBar.style.display = 'none';
+            e.target.value = '';
+        });
+
+        function addFilePreview(fileData, originalFile) {
+            const previewContainer = document.getElementById('uploadedFilesPreview');
+            if (!previewContainer) return;
+            
+            const col = document.createElement('div');
+            col.className = 'col-md-3 col-sm-4 col-6';
+            
+            const isImage = fileData.type === 'Image';
+            const isVideo = fileData.type === 'Video';
+            
+            col.innerHTML = `
+                <div class="card border position-relative file-preview-card">
+                    ${isImage ? `
+                        <img src="/api/files/${fileData.id}/download" class="card-img-top" style="height: 100px; object-fit: cover;" alt="${fileData.storedFileName}">
+                    ` : isVideo ? `
+                        <div class="card-img-top bg-dark d-flex align-items-center justify-content-center" style="height: 100px;">
+                            <i class="bi bi-play-circle text-white"></i>
+                        </div>
+                    ` : `
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 100px;">
+                            <i class="bi bi-file-earmark text-primary"></i>
+                        </div>
+                    `}
+                    <div class="card-body p-1">
+                        <small class="text-muted d-block text-truncate" title="${originalFile.name}" style="font-size: 0.7rem;">${originalFile.name}</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 remove-file-btn" 
+                            data-file-id="${fileData.id}" style="opacity: 0.9; padding: 0.25rem 0.5rem;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            `;
+            
+            previewContainer.appendChild(col);
+
+            col.querySelector('.remove-file-btn')?.addEventListener('click', function() {
+                const fileId = this.getAttribute('data-file-id');
+                const index = uploadedFileIds.indexOf(fileId);
+                if (index > -1) {
+                    uploadedFileIds.splice(index, 1);
+                    const uploadedFileIdsInput = document.getElementById('uploadedFileIds');
+                    if (uploadedFileIdsInput) {
+                        uploadedFileIdsInput.value = uploadedFileIds.join(',');
+                    }
+                }
+                col.remove();
+            });
+        }
+
+        function saveAsDraft() {
+            // Create a hidden input for IsPublish = false
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'IsPublish';
+            hiddenInput.value = 'false';
+            document.getElementById('publicationForm')?.appendChild(hiddenInput);
+            
+            // Remove the existing IsPublish input if it exists
+            const existingInput = document.querySelector('input[name="IsPublish"][type="hidden"]');
+            if (existingInput && existingInput.value === 'true') {
+                existingInput.remove();
+            }
+            
+            document.getElementById('publicationForm')?.submit();
+        }
+    </script>
+    
+    <style>
+        .publication-editor-container {
+            min-height: calc(100vh - 0px);
+            background-color: #f8f9fa;
+        }
+
+        .publication-sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: calc(100vh - 0px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-content {
+            padding: 2rem;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .settings-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header {
+            color: white;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-box {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .toggle-options {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .toggle-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            flex-grow: 1;
+        }
+
+        .toggle-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .toggle-option.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        .toggle-option input[type="checkbox"] {
+            margin-left: 0.5rem;
+            accent-color: #667eea;
+        }
+
+        .channels-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .channel-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+
+        .channel-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .channel-item .form-check-input {
+            accent-color: #667eea;
+        }
+
+        /* Editor Styles */
+        .publication-editor {
+            background: white;
+            min-height: calc(100vh - 0px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-content {
+            padding: 2rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 1rem;
+        }
+
+        .editor-main {
+            flex-grow: 1;
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-main textarea {
+            min-height: 300px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .media-upload-section {
+            margin-top: 1.5rem;
+        }
+
+        .file-preview-card {
+            transition: transform 0.2s;
+        }
+        
+        .file-preview-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .remove-file-btn {
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Custom Scrollbar for channels-list */
+        .channels-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .channels-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .channels-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        @@media (max-width: 992px) {
+            .publication-sidebar {
+                min-height: auto;
+            }
+            
+            .publication-editor {
+                min-height: auto;
+            }
+        }
+    </style>
+}

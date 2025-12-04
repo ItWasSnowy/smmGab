@@ -14,11 +14,33 @@
                     <i class="bi bi-calendar3 me-2"></i>Создан @Model.CreatedAtUtc.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("ru-RU"))
                 </p>
             </div>
-            <form asp-action="ChangeProject" method="post" class="d-inline">
-                <button type="submit" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Сменить проект
-                </button>
-            </form>
+            <div class="d-flex gap-2 align-items-center">
+                <form asp-action="ChangeProject" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light">
+                        <i class="bi bi-arrow-left me-2"></i>Сменить проект
+                    </button>
+                </form>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle me-2"></i>@User.Identity?.Name
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                        <li>
+                            <a class="dropdown-item" asp-controller="Projects" asp-action="Index">
+                                <i class="bi bi-folder me-2"></i>Проекты
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                <button type="submit" class="dropdown-item">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Выход
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 

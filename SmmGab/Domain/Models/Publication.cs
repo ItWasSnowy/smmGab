@@ -7,7 +7,8 @@ public class Publication
     public Guid Id { get; set; }
     public Guid ProjectId { get; set; }
     public string Text { get; set; } = string.Empty;              // Заголовок/название публикации
-    public string? DeltaQuill { get; set; }        // Форматированный контент в формате Delta Quill
+    public string? Body { get; set; }                             // Текст публикации (простой текст)
+    public string? DeltaQuill { get; set; }        // Форматированный контент в формате Delta Quill (для обратной совместимости)
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? ScheduledAtUtc { get; set; }
     public DateTime? PublishedAtUtc { get; set; }

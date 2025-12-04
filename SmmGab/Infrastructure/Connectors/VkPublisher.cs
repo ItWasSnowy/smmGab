@@ -56,11 +56,19 @@ public class VkPublisher : IPublisher
             var ownerId = channel.ExternalId;
             _logger.LogInformation("Publishing to VK group {GroupId} (ChannelId: {ChannelId})", ownerId, channel.Id);
 
-            // Извлекаем файлы из DeltaQuill
-            var files = await _deltaFileExtractor.GetFilesFromDeltaAsync(publication.DeltaQuill, cancellationToken);
-            var images = files.Where(f => f.Type == FileType.Image).ToList();
+            // Получаем файлы, связанные с публикацией через PublicationId
+            var filesFromPublication = publication.Files?.Where(f => !f.IsTemporary).ToList() ?? new List<FileStorage>();
             
-            _logger.LogDebug("Found {ImageCount} images in publication", images.Count);
+            _logger.LogInformation("VK Publisher - Publication files: {FileCount}, Body: {BodyLength}, Files collection: {FilesCollection}", 
+                filesFromPublication.Count, 
+                string.IsNullOrEmpty(publication.Body) ? "NULL/EMPTY" : publication.Body.Length.ToString(),
+                publication.Files == null ? "NULL" : $"{publication.Files.Count} items");
+            
+            var images = filesFromPublication.Where(f => f.Type == FileType.Image).ToList();
+            
+            _logger.LogInformation("VK Publisher - Found {ImageCount} images in publication. File IDs: {FileIds}", 
+                images.Count, 
+                string.Join(", ", images.Select(f => f.Id)));
 
             if (images.Count > 10)
             {
@@ -90,12 +98,17 @@ public class VkPublisher : IPublisher
                 }
             }
 
-            // Публикуем пост
-            var message = publication.Text;
+            // Формируем сообщение для VK: заголовок + текст публикации
+            var message = BuildVkMessage(publication.Text, publication.Body);
+            
+            _logger.LogInformation("VK Publisher - Message: Title={Title}, Body={Body}, Message length={MessageLength}", 
+                publication.Text, 
+                string.IsNullOrEmpty(publication.Body) ? "NULL/EMPTY" : publication.Body.Substring(0, Math.Min(100, publication.Body.Length)) + "...",
+                message.Length);
             var attachments = string.Join(",", attachmentIds);
 
-            _logger.LogDebug("Publishing post to VK: owner_id={OwnerId}, message_length={MessageLength}, attachments_count={AttachmentsCount}", 
-                ownerId, message.Length, attachmentIds.Count);
+            _logger.LogDebug("Publishing post to VK: owner_id={OwnerId}, message_length={MessageLength}, message={Message}, attachments_count={AttachmentsCount}", 
+                ownerId, message.Length, message, attachmentIds.Count);
 
             var postUrl = $"https://api.vk.com/method/wall.post?access_token={token}&owner_id={ownerId}&message={Uri.EscapeDataString(message)}&attachments={Uri.EscapeDataString(attachments)}&from_group=1&v={_apiVersion}";
 
@@ -306,6 +319,36 @@ public class VkPublisher : IPublisher
         {
             _logger.LogError(ex, "Error uploading image to VK");
             return null;
+        }
+    }
+
+    private string BuildVkMessage(string title, string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return title;
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine(title);
+        sb.AppendLine();
+        sb.Append(body);
+        
+        return sb.ToString().Trim();
+    }
+
+    private class FileStorageComparer : IEqualityComparer<FileStorage>
+    {
+        public bool Equals(FileStorage? x, FileStorage? y)
+        {
+            if (x == null && y == null) return true;
+            if (x == null || y == null) return false;
+            return x.Id == y.Id;
+        }
+
+        public int GetHashCode(FileStorage obj)
+        {
+            return obj.Id.GetHashCode();
         }
     }
 }

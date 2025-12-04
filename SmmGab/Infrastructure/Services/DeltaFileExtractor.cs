@@ -67,9 +67,15 @@ public class DeltaFileExtractor : IDeltaFileExtractor
         if (urls.Count == 0)
             return new List<FileStorage>();
 
-        var filePaths = urls.Select(url => url.Replace("/Files/KnowledgeBase/", "").Split('.').FirstOrDefault())
-            .Where(guid => !string.IsNullOrEmpty(guid) && Guid.TryParse(guid, out _))
-            .Select(guid => Guid.Parse(guid!))
+        var filePaths = urls.Select(url => {
+                // Поддерживаем разные форматы URL: /api/files/{guid}/download или /Files/KnowledgeBase/{guid}.ext
+                var match = Regex.Match(url, @"(?:/api/files/|/Files/KnowledgeBase/)([a-f0-9\-]+)", RegexOptions.IgnoreCase);
+                if (match.Success && Guid.TryParse(match.Groups[1].Value, out var guid))
+                    return guid;
+                return (Guid?)null;
+            })
+            .Where(guid => guid.HasValue)
+            .Select(guid => guid!.Value)
             .ToList();
 
         if (filePaths.Count == 0)

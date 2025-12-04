@@ -21,6 +21,7 @@ public class FilesController : ControllerBase
     }
 
     [HttpPost("upload")]
+    [IgnoreAntiforgeryToken]
     public async Task<ActionResult<Domain.Models.FileStorage>> UploadFile(IFormFile file, CancellationToken cancellationToken)
     {
         if (file == null || file.Length == 0)

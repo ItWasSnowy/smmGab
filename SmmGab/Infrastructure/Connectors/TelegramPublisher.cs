@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -69,11 +71,20 @@ public class TelegramPublisher : IPublisher
                 };
             }
 
-            // Извлекаем файлы из DeltaQuill
-            var files = await _deltaFileExtractor.GetFilesFromDeltaAsync(publication.DeltaQuill, cancellationToken);
+            // Получаем файлы, связанные с публикацией через PublicationId
+            var files = publication.Files?.Where(f => !f.IsTemporary).ToList() ?? new List<FileStorage>();
+            
+            _logger.LogInformation("Telegram Publisher - Publication files: {FileCount}, Body: {BodyLength}, Files collection: {FilesCollection}", 
+                files.Count, 
+                string.IsNullOrEmpty(publication.Body) ? "NULL/EMPTY" : publication.Body.Length.ToString(),
+                publication.Files == null ? "NULL" : $"{publication.Files.Count} items");
+            
+            _logger.LogInformation("Telegram Publisher - Found {FileCount} files. File IDs: {FileIds}", 
+                files.Count,
+                string.Join(", ", files.Select(f => f.Id)));
 
-            // Конвертируем DeltaQuill в HTML
-            var htmlText = ConvertDeltaToTelegramHtml(publication.DeltaQuill, publication.Text);
+            // Формируем HTML сообщение для Telegram: заголовок + текст публикации
+            var htmlText = BuildTelegramMessage(publication.Text, publication.Body);
 
             // Если есть файлы
             if (files.Any())
@@ -171,65 +182,18 @@ public class TelegramPublisher : IPublisher
         return null;
     }
 
-    private string ConvertDeltaToTelegramHtml(string? deltaQuill, string title)
+    private string BuildTelegramMessage(string title, string? body)
     {
-        if (string.IsNullOrWhiteSpace(deltaQuill))
-            return $"<b>{EscapeHtml(title)}</b>";
-
-        try
+        var sb = new StringBuilder();
+        sb.Append($"<b>{EscapeHtml(title)}</b>");
+        
+        if (!string.IsNullOrWhiteSpace(body))
         {
-            var delta = JsonDocument.Parse(deltaQuill);
-            var ops = delta.RootElement.GetProperty("ops");
-            var sb = new StringBuilder();
-
-            // Добавляем заголовок
-            sb.Append($"<b>{EscapeHtml(title)}</b>\n\n");
-
-            foreach (var op in ops.EnumerateArray())
-            {
-                if (op.TryGetProperty("insert", out var insert))
-                {
-                    if (insert.ValueKind == JsonValueKind.String)
-                    {
-                        var text = insert.GetString() ?? "";
-                        // Проверяем атрибуты форматирования
-                        if (op.TryGetProperty("attributes", out var attrs))
-                        {
-                            if (attrs.TryGetProperty("bold", out _))
-                                text = $"<b>{EscapeHtml(text)}</b>";
-                            else if (attrs.TryGetProperty("italic", out _))
-                                text = $"<i>{EscapeHtml(text)}</i>";
-                            else if (attrs.TryGetProperty("underline", out _))
-                                text = $"<u>{EscapeHtml(text)}</u>";
-                            else if (attrs.TryGetProperty("strike", out _))
-                                text = $"<s>{EscapeHtml(text)}</s>";
-                            else
-                                text = EscapeHtml(text);
-
-                            if (attrs.TryGetProperty("link", out var link))
-                                text = $"<a href=\"{EscapeHtml(link.GetString()!)}\">{text}</a>";
-                        }
-                        else
-                        {
-                            text = EscapeHtml(text);
-                        }
-
-                        sb.Append(text);
-                    }
-                    // Пропускаем изображения и видео (они отправляются отдельно)
-                    else if (insert.TryGetProperty("image", out _) || insert.TryGetProperty("video", out _))
-                    {
-                        // Игнорируем
-                    }
-                }
-            }
-
-            return sb.ToString();
+            sb.Append("\n\n");
+            sb.Append(EscapeHtml(body));
         }
-        catch
-        {
-            return $"<b>{EscapeHtml(title)}</b>";
-        }
+        
+        return sb.ToString();
     }
 
     private string EscapeHtml(string text)
@@ -704,6 +668,21 @@ public class TelegramPublisher : IPublisher
             parts.Add(currentPart.ToString());
 
         return parts;
+    }
+
+    private class FileStorageComparer : IEqualityComparer<FileStorage>
+    {
+        public bool Equals(FileStorage? x, FileStorage? y)
+        {
+            if (x == null && y == null) return true;
+            if (x == null || y == null) return false;
+            return x.Id == y.Id;
+        }
+
+        public int GetHashCode(FileStorage obj)
+        {
+            return obj.Id.GetHashCode();
+        }
     }
 }
 
