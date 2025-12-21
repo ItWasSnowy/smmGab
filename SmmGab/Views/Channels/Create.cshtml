@@ -3,105 +3,256 @@
     ViewData["Title"] = "Создать канал";
 }
 
-<div class="d-flex align-items-center mb-4">
-    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary me-3">
-        <i class="bi bi-arrow-left me-1"></i>Назад
-    </a>
-    <h2 class="mb-0">Создать канал</h2>
-</div>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left me-1"></i>Назад
+            </a>
+            <h2 class="mb-0 fw-bold">Создать канал</h2>
+        </div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-white border-0 pb-0">
-        <h5 class="card-title mb-0 fw-bold">
-            <i class="bi bi-broadcast me-2 text-primary"></i>Информация о канале
-        </h5>
-    </div>
-    <div class="card-body">
-        <form asp-action="Create" method="post">
-            <div asp-validation-summary="All" class="alert alert-danger"></div>
-            
-            <div class="form-group mb-3">
-                <label asp-for="ProjectId" class="form-label fw-semibold">
-                    <i class="bi bi-folder me-2"></i>Проект
-                </label>
-                <select asp-for="ProjectId" asp-items="ViewBag.Projects" class="form-select">
-                    <option value="">-- Выберите проект --</option>
-                </select>
-                <span asp-validation-for="ProjectId" class="text-danger"></span>
+        <div class="card shadow-lg border-0">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 1rem 1rem 0 0;">
+                <div class="d-flex align-items-center">
+                    <div class="channel-create-icon me-3">
+                        <i class="bi bi-broadcast fs-2"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">Новый канал</h4>
+                        <small class="opacity-75">Заполните информацию о канале для публикаций</small>
+                    </div>
+                </div>
             </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="All" class="alert alert-danger"></div>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="ProjectId" class="form-label fw-semibold">
+                                    <i class="bi bi-folder me-2 text-primary"></i>Проект
+                                </label>
+                                <select asp-for="ProjectId" asp-items="ViewBag.Projects" class="form-select form-select-lg">
+                                    <option value="">-- Выберите проект --</option>
+                                </select>
+                                <span asp-validation-for="ProjectId" class="text-danger"></span>
+                            </div>
+                        </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="DisplayName" class="form-label fw-semibold">
-                    <i class="bi bi-tag me-2"></i>Название канала
-                </label>
-                <input asp-for="DisplayName" class="form-control" placeholder="Название канала" />
-                <span asp-validation-for="DisplayName" class="text-danger"></span>
-            </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="DisplayName" class="form-label fw-semibold">
+                                    <i class="bi bi-tag me-2 text-primary"></i>Название канала
+                                </label>
+                                <input asp-for="DisplayName" class="form-control form-control-lg" placeholder="Введите название канала" />
+                                <span asp-validation-for="DisplayName" class="text-danger"></span>
+                            </div>
+                        </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Type" class="form-label fw-semibold">
-                    <i class="bi bi-broadcast me-2"></i>Тип канала
-                </label>
-                <select asp-for="Type" class="form-select" id="channelType">
-                    <option value="1">ВКонтакте</option>
-                    <option value="2">Telegram</option>
-                </select>
-                <span asp-validation-for="Type" class="text-danger"></span>
-            </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label asp-for="Type" class="form-label fw-semibold">
+                                    <i class="bi bi-broadcast me-2 text-primary"></i>Тип канала
+                                </label>
+                                <div class="row g-3" id="channelTypeOptions">
+                                    <div class="col-md-6">
+                                        <label class="channel-type-card" data-type="1">
+                                            <input type="radio" asp-for="Type" value="1" class="d-none" id="typeVk" />
+                                            <div class="card h-100 border-2 channel-type-option" id="cardVk">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="channel-type-icon bg-primary mb-3">
+                                                        <i class="bi bi-chat-dots-fill text-white"></i>
+                                                    </div>
+                                                    <h5 class="fw-bold mb-2">ВКонтакте</h5>
+                                                    <small class="text-muted">Группа или сообщество ВК</small>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="channel-type-card" data-type="2">
+                                            <input type="radio" asp-for="Type" value="2" class="d-none" id="typeTelegram" />
+                                            <div class="card h-100 border-2 channel-type-option" id="cardTelegram">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="channel-type-icon bg-info mb-3">
+                                                        <i class="bi bi-telegram text-white"></i>
+                                                    </div>
+                                                    <h5 class="fw-bold mb-2">Telegram</h5>
+                                                    <small class="text-muted">Канал или группа Telegram</small>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <span asp-validation-for="Type" class="text-danger"></span>
+                            </div>
+                        </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="ExternalId" class="form-label fw-semibold">
-                    <i class="bi bi-hash me-2"></i>Внешний ID
-                </label>
-                <input asp-for="ExternalId" class="form-control" id="externalId" placeholder="ID группы/канала" />
-                <small class="form-text text-muted" id="externalIdHelp">
-                    Для ВК: ID группы (например, -123456789)<br />
-                    Для Telegram: ID канала или username (например, @@my_channel или -1001234567890)
-                </small>
-                <span asp-validation-for="ExternalId" class="text-danger"></span>
-            </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label asp-for="ExternalId" class="form-label fw-semibold">
+                                    <i class="bi bi-hash me-2 text-primary"></i>Внешний ID
+                                </label>
+                                <input asp-for="ExternalId" class="form-control form-control-lg" id="externalId" placeholder="ID группы/канала" />
+                                <div class="alert alert-info mt-2 mb-0" id="externalIdHelp">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <small>
+                                        Для ВК: ID группы (например, -123456789)<br />
+                                        Для Telegram: ID канала или username (например, @@my_channel или -1001234567890)
+                                    </small>
+                                </div>
+                                <span asp-validation-for="ExternalId" class="text-danger"></span>
+                            </div>
+                        </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="AuthRef" class="form-label fw-semibold">
-                    <i class="bi bi-key me-2"></i>Токен авторизации
-                </label>
-                <textarea asp-for="AuthRef" class="form-control" rows="3" id="authRef" placeholder="Токен авторизации"></textarea>
-                <small class="form-text text-muted" id="authRefHelp">
-                    Для ВК: JSON с токеном {"token": "ваш_токен"}<br />
-                    Для Telegram: Bot token (например, 123456789:ABCdefGHIjklMNOpqrsTUVwxyz)
-                </small>
-                <span asp-validation-for="AuthRef" class="text-danger"></span>
-            </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label asp-for="AuthRef" class="form-label fw-semibold">
+                                    <i class="bi bi-key me-2 text-primary"></i>Токен авторизации
+                                </label>
+                                <textarea asp-for="AuthRef" class="form-control" rows="4" id="authRef" placeholder="Токен авторизации"></textarea>
+                                <div class="alert alert-info mt-2 mb-0" id="authRefHelp">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <small>
+                                        Для ВК: JSON с токеном {"token": "ваш_токен"}<br />
+                                        Для Telegram: Bot token (например, 123456789:ABCdefGHIjklMNOpqrsTUVwxyz)
+                                    </small>
+                                </div>
+                                <span asp-validation-for="AuthRef" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="form-group d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Создать
-                </button>
-                <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+                    <div class="form-group d-flex gap-2 mt-4 pt-4 border-top">
+                        <button type="submit" class="btn btn-primary btn-lg flex-fill" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                            <i class="bi bi-check-circle me-2"></i>Создать канал
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-lg">Отмена</a>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        document.getElementById('channelType').addEventListener('change', function() {
-            var type = parseInt(this.value);
+        // Обработка выбора типа канала через карточки
+        document.querySelectorAll('.channel-type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const type = parseInt(this.getAttribute('data-type'));
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // Обновляем визуальное состояние карточек
+                document.querySelectorAll('.channel-type-option').forEach(opt => {
+                    opt.classList.remove('border-primary', 'bg-light');
+                });
+                
+                if (type === 1) {
+                    document.getElementById('cardVk').classList.add('border-primary', 'bg-light');
+                    document.getElementById('cardTelegram').classList.remove('border-primary', 'bg-light');
+                } else {
+                    document.getElementById('cardTelegram').classList.add('border-primary', 'bg-light');
+                    document.getElementById('cardVk').classList.remove('border-primary', 'bg-light');
+                }
+                
+                updateHelpText(type);
+            });
+        });
+        
+        // Обработка изменения через radio
+        document.querySelectorAll('input[type="radio"][name="Type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const type = parseInt(this.value);
+                updateHelpText(type);
+                
+                // Обновляем визуальное состояние
+                document.querySelectorAll('.channel-type-option').forEach(opt => {
+                    opt.classList.remove('border-primary', 'bg-light');
+                });
+                
+                if (type === 1) {
+                    document.getElementById('cardVk').classList.add('border-primary', 'bg-light');
+                } else {
+                    document.getElementById('cardTelegram').classList.add('border-primary', 'bg-light');
+                }
+            });
+        });
+        
+        function updateHelpText(type) {
             var externalIdHelp = document.getElementById('externalIdHelp');
             var authRefHelp = document.getElementById('authRefHelp');
             var authRef = document.getElementById('authRef');
+            var externalId = document.getElementById('externalId');
             
             if (type === 1) { // VK
-                externalIdHelp.innerHTML = 'Для ВК: ID группы (например, -123456789)';
-                authRefHelp.innerHTML = 'Для ВК: JSON с токеном {"token": "ваш_токен"}';
+                externalIdHelp.innerHTML = '<i class="bi bi-info-circle me-2"></i><small>Для ВК: ID группы (например, -123456789)</small>';
+                authRefHelp.innerHTML = '<i class="bi bi-info-circle me-2"></i><small>Для ВК: JSON с токеном {"token": "ваш_токен"}</small>';
                 authRef.placeholder = '{"token": "ваш_токен"}';
+                externalId.placeholder = 'ID группы (например, -123456789)';
             } else { // Telegram
-                externalIdHelp.innerHTML = 'Для Telegram: ID канала или username (например, @@my_channel или -1001234567890)';
-                authRefHelp.innerHTML = 'Для Telegram: Bot token (например, 123456789:ABCdefGHIjklMNOpqrsTUVwxyz)';
+                externalIdHelp.innerHTML = '<i class="bi bi-info-circle me-2"></i><small>Для Telegram: ID канала или username (например, @@my_channel или -1001234567890)</small>';
+                authRefHelp.innerHTML = '<i class="bi bi-info-circle me-2"></i><small>Для Telegram: Bot token (например, 123456789:ABCdefGHIjklMNOpqrsTUVwxyz)</small>';
                 authRef.placeholder = '123456789:ABCdefGHIjklMNOpqrsTUVwxyz';
+                externalId.placeholder = 'ID канала или username (например, @@my_channel)';
             }
-        });
+        }
+        
+        // Инициализация при загрузке
+        const selectedType = document.querySelector('input[type="radio"][name="Type"]:checked');
+        if (selectedType) {
+            updateHelpText(parseInt(selectedType.value));
+            const type = parseInt(selectedType.value);
+            if (type === 1) {
+                document.getElementById('cardVk').classList.add('border-primary', 'bg-light');
+            } else {
+                document.getElementById('cardTelegram').classList.add('border-primary', 'bg-light');
+            }
+        }
     </script>
+    <style>
+        .channel-create-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .channel-type-card {
+            cursor: pointer;
+        }
+        
+        .channel-type-card input[type="radio"]:checked + .channel-type-option {
+            border-color: #667eea !important;
+            background-color: #f8f9ff !important;
+        }
+        
+        .channel-type-option {
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .channel-type-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .channel-type-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+        }
+    </style>
 }
 
