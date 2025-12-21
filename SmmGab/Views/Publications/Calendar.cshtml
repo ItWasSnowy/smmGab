@@ -10,72 +10,157 @@
     firstDayOfWeek--; // Для отображения понедельника как первого дня
 }
 
-<h2>Календарь публикаций - @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month) @year</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Назад
+        </a>
+        <h2 class="mb-0">Календарь публикаций - @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month) @year</h2>
+    </div>
+</div>
 
 <div class="d-flex justify-content-between mb-3">
     <a asp-controller="Publications" asp-action="Calendar" asp-route-year="@(month == 1 ? year - 1 : year)" asp-route-month="@(month == 1 ? 12 : month - 1)" class="btn btn-outline-primary">← Предыдущий месяц</a>
     <a asp-controller="Publications" asp-action="Calendar" asp-route-year="@(month == 12 ? year + 1 : year)" asp-route-month="@(month == 12 ? 1 : month + 1)" class="btn btn-outline-primary">Следующий месяц →</a>
 </div>
 
-<div class="calendar">
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Пн</th>
-                <th>Вт</th>
-                <th>Ср</th>
-                <th>Чт</th>
-                <th>Пт</th>
-                <th>Сб</th>
-                <th>Вс</th>
-            </tr>
-        </thead>
-        <tbody>
-            @{
-                var day = 1;
-                var publicationsByDay = Model.GroupBy(p => p.ScheduledAtUtc?.Day ?? 0).ToDictionary(g => g.Key, g => g.ToList());
-            }
-            @for (int week = 0; week < 6; week++)
-            {
+<div class="calendar-container">
+    <div class="calendar card shadow-sm border-0">
+        <table class="table table-bordered mb-0">
+            <thead class="table-light">
                 <tr>
-                    @for (int dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++)
-                    {
-                        <td style="height: 100px; vertical-align: top;">
-                            @if (week == 0 && dayOfWeek < firstDayOfWeek)
-                            {
-                                <span class="text-muted"></span>
-                            }
-                            else if (day <= daysInMonth)
-                            {
-                                <strong>@day</strong>
-                                @if (publicationsByDay.ContainsKey(day))
-                                {
-                                    <div class="mt-2">
-                                        @foreach (var pub in publicationsByDay[day])
-                                        {
-                                            <div class="badge bg-primary mb-1" style="font-size: 0.7em; display: block;">
-                                                @pub.Text
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                                day++;
-                            }
-                        </td>
-                    }
+                    <th class="text-center">Пн</th>
+                    <th class="text-center">Вт</th>
+                    <th class="text-center">Ср</th>
+                    <th class="text-center">Чт</th>
+                    <th class="text-center">Пт</th>
+                    <th class="text-center">Сб</th>
+                    <th class="text-center">Вс</th>
                 </tr>
-                @if (day > daysInMonth) break;
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @{
+                    var day = 1;
+                    var publicationsByDay = Model.GroupBy(p => p.ScheduledAtUtc?.Day ?? 0).ToDictionary(g => g.Key, g => g.ToList());
+                    var today = DateTime.UtcNow;
+                    var isCurrentMonth = today.Year == year && today.Month == month;
+                }
+                @for (int week = 0; week < 6; week++)
+                {
+                    <tr>
+                        @for (int dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++)
+                        {
+                            var isToday = isCurrentMonth && day == today.Day;
+                            <td class="calendar-day @(isToday ? "today" : "")" style="height: 120px; vertical-align: top; position: relative;">
+                                @if (week == 0 && dayOfWeek < firstDayOfWeek)
+                                {
+                                    <span class="text-muted"></span>
+                                }
+                                else if (day <= daysInMonth)
+                                {
+                                    <div class="calendar-day-number @(isToday ? "today-number" : "")">@day</div>
+                                    @if (publicationsByDay.ContainsKey(day))
+                                    {
+                                        <div class="calendar-events mt-2">
+                                            @foreach (var pub in publicationsByDay[day])
+                                            {
+                                                var statusClass = pub.Status switch
+                                                {
+                                                    SmmGab.Domain.Enums.PublicationStatus.Published => "success",
+                                                    SmmGab.Domain.Enums.PublicationStatus.Failed => "danger",
+                                                    SmmGab.Domain.Enums.PublicationStatus.Publishing => "warning",
+                                                    SmmGab.Domain.Enums.PublicationStatus.Scheduled => "info",
+                                                    _ => "secondary"
+                                                };
+                                                <a asp-controller="Publications" asp-action="Details" asp-route-id="@pub.Id" 
+                                                   class="calendar-event badge bg-@statusClass mb-1 d-block text-decoration-none" 
+                                                   title="@pub.Text"
+                                                   style="font-size: 0.7em; text-align: left; padding: 0.25rem 0.5rem; cursor: pointer;">
+                                                    @(pub.Text.Length > 20 ? pub.Text.Substring(0, 20) + "..." : pub.Text)
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                    day++;
+                                }
+                            </td>
+                        }
+                    </tr>
+                    @if (day > daysInMonth) break;
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <style>
+    .calendar-container {
+        margin-top: 1rem;
+    }
+    
+    .calendar {
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+    
     .calendar table {
         width: 100%;
+        margin-bottom: 0;
     }
+    
     .calendar td {
         width: 14.28%;
+        padding: 0.5rem;
+        transition: background-color 0.2s;
+    }
+    
+    .calendar-day:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .calendar-day.today {
+        background-color: #e7f3ff;
+    }
+    
+    .calendar-day-number {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .calendar-day-number.today-number {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    .calendar-events {
+        max-height: 80px;
+        overflow-y: auto;
+    }
+    
+    .calendar-event {
+        transition: transform 0.2s, opacity 0.2s;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .calendar-event:hover {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+    
+    .calendar thead th {
+        font-weight: 600;
+        padding: 0.75rem;
+        background-color: #f8f9fa;
     }
 </style>
 

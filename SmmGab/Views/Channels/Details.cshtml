@@ -3,72 +3,153 @@
     ViewData["Title"] = Model.DisplayName;
 }
 
-<h2>@Model.DisplayName</h2>
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+            <div class="channel-icon-bg me-3">
+                @if (Model.Type == SmmGab.Domain.Enums.ChannelType.Vk)
+                {
+                    <div class="channel-icon-bg-inner bg-primary">
+                        <i class="bi bi-chat-dots-fill text-white"></i>
+                    </div>
+                }
+                else
+                {
+                    <div class="channel-icon-bg-inner bg-info">
+                        <i class="bi bi-telegram text-white"></i>
+                    </div>
+                }
+            </div>
+            <div class="flex-grow-1">
+                <h2 class="mb-0 fw-bold">@Model.DisplayName</h2>
+                <span class="badge bg-@(Model.Type == SmmGab.Domain.Enums.ChannelType.Vk ? "primary" : "info")">
+                    @Model.Type
+                </span>
+            </div>
+        </div>
+        
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-folder text-muted me-2"></i>
+                    <div>
+                        <small class="text-muted d-block">Проект</small>
+                        <strong>@Model.Project.Name</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-hash text-muted me-2"></i>
+                    <div>
+                        <small class="text-muted d-block">Внешний ID</small>
+                        <code>@Model.ExternalId</code>
+                    </div>
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.AuthRef))
+            {
+                <div class="col-12">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-key text-muted me-2"></i>
+                        <div>
+                            <small class="text-muted d-block">Токен авторизации</small>
+                            <code style="word-break: break-all; font-size: 0.85rem;">@(Model.AuthRef.Length > 50 ? Model.AuthRef.Substring(0, 50) + "..." : Model.AuthRef)</code>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
 
-<div class="row mt-4">
-    <div class="col-md-6">
-        <h4>Информация о канале</h4>
-        <p><strong>Проект:</strong> @Model.Project.Name</p>
-        <p><strong>Тип:</strong> 
-            <span class="badge bg-@(Model.Type == SmmGab.Domain.Enums.ChannelType.Vk ? "primary" : "info")">
-                @Model.Type
-            </span>
-        </p>
-        <p><strong>Внешний ID:</strong> <code>@Model.ExternalId</code></p>
-        @if (!string.IsNullOrEmpty(Model.AuthRef))
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-0 pb-0">
+        <h5 class="card-title mb-0 fw-bold">
+            <i class="bi bi-file-post me-2 text-success"></i>Публикации в этом канале (@Model.PublicationTargets.Count)
+        </h5>
+    </div>
+    <div class="card-body">
+        @if (Model.PublicationTargets.Any())
         {
-            <p><strong>Токен авторизации:</strong> 
-                <code style="word-break: break-all;">@(Model.AuthRef.Length > 50 ? Model.AuthRef.Substring(0, 50) + "..." : Model.AuthRef)</code>
-            </p>
+            <div class="row g-3">
+                @foreach (var target in Model.PublicationTargets.OrderByDescending(t => t.Publication.CreatedAtUtc))
+                {
+                    <div class="col-12">
+                        <div class="card border publication-target-card">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-start justify-content-between">
+                                    <div class="flex-grow-1">
+                                        <a asp-controller="Publications" asp-action="Details" asp-route-id="@target.Publication.Id" class="text-decoration-none fw-semibold d-block mb-2">
+                                            @target.Publication.Text
+                                        </a>
+                                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                                            <span class="badge bg-@(target.Status == SmmGab.Domain.Enums.TargetStatus.Published ? "success" : 
+                                                         target.Status == SmmGab.Domain.Enums.TargetStatus.Failed ? "danger" : 
+                                                         target.Status == SmmGab.Domain.Enums.TargetStatus.Publishing ? "warning" : "secondary")">
+                                                @target.Status
+                                            </span>
+                                            @if (target.PublishedAtUtc.HasValue)
+                                            {
+                                                <small class="text-muted">
+                                                    <i class="bi bi-calendar3 me-1"></i>@target.PublishedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")
+                                                </small>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(target.LastError))
+                                        {
+                                            <div class="mt-2">
+                                                <small class="text-danger">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>@target.LastError
+                                                </small>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <i class="bi bi-file-post display-6 text-muted"></i>
+                <p class="text-muted mt-2 mb-0">Нет публикаций в этом канале</p>
+            </div>
         }
     </div>
 </div>
 
-<div class="mt-4">
-    <h4>Публикации в этом канале (@Model.PublicationTargets.Count)</h4>
-    @if (Model.PublicationTargets.Any())
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Публикация</th>
-                    <th>Статус</th>
-                    <th>Ошибка</th>
-                    <th>Опубликовано</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var target in Model.PublicationTargets.OrderByDescending(t => t.Publication.CreatedAtUtc))
-                {
-                    <tr>
-                        <td>
-                            <a asp-controller="Publications" asp-action="Details" asp-route-id="@target.Publication.Id">
-                                @target.Publication.Text
-                            </a>
-                        </td>
-                        <td>
-                            <span class="badge bg-@(target.Status == SmmGab.Domain.Enums.TargetStatus.Published ? "success" : 
-                                         target.Status == SmmGab.Domain.Enums.TargetStatus.Failed ? "danger" : 
-                                         target.Status == SmmGab.Domain.Enums.TargetStatus.Publishing ? "warning" : "secondary")">
-                                @target.Status
-                            </span>
-                        </td>
-                        <td>@(target.LastError ?? "-")</td>
-                        <td>@(target.PublishedAtUtc?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<style>
+    .channel-icon-bg-inner {
+        width: 60px;
+        height: 60px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
     }
-    else
-    {
-        <p class="text-muted">Нет публикаций в этом канале</p>
+    
+    .publication-target-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 0.5rem;
     }
-</div>
+    
+    .publication-target-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+</style>
 
 <div class="mt-4">
     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Редактировать</a>
     <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>На главную
+    </a>
     <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот канал?');">
         <button type="submit" class="btn btn-danger">Удалить</button>
     </form>

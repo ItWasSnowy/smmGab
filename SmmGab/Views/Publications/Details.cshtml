@@ -3,116 +3,213 @@
     ViewData["Title"] = Model.Text;
 }
 
-<h2>@Model.Text</h2>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <h5 class="fw-bold mb-3">
-                        <i class="bi bi-info-circle me-2 text-primary"></i>Информация о публикации
-                    </h5>
-                    <div class="mb-3">
-                        <strong>Проект:</strong> 
-                        <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectId" class="text-decoration-none">
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+            <div class="publication-icon-bg bg-success me-3">
+                <i class="bi bi-file-post text-white"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h2 class="mb-0 fw-bold">@Model.Text</h2>
+                @{
+                    var statusClass = Model.Status switch
+                    {
+                        SmmGab.Domain.Enums.PublicationStatus.Published => "success",
+                        SmmGab.Domain.Enums.PublicationStatus.Failed => "danger",
+                        SmmGab.Domain.Enums.PublicationStatus.Publishing => "warning",
+                        SmmGab.Domain.Enums.PublicationStatus.Scheduled => "info",
+                        _ => "secondary"
+                    };
+                }
+                <span class="badge bg-@statusClass mt-2">@Model.Status</span>
+            </div>
+        </div>
+        
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-folder text-muted me-2"></i>
+                    <div>
+                        <small class="text-muted d-block">Проект</small>
+                        <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectId" class="text-decoration-none fw-semibold">
                             @Model.Project.Name
                         </a>
                     </div>
-                    <div class="mb-3">
-                        <strong>Создана:</strong> @Model.CreatedAtUtc.ToString("dd.MM.yyyy HH:mm")
-                    </div>
-                    @if (Model.ScheduledAtUtc.HasValue)
-                    {
-                        <div class="mb-3">
-                            <strong>Запланирована на:</strong> @Model.ScheduledAtUtc.Value.ToString("dd.MM.yyyy HH:mm")
-                        </div>
-                    }
-                    @if (Model.PublishedAtUtc.HasValue)
-                    {
-                        <div class="mb-3">
-                            <strong>Опубликована:</strong> @Model.PublishedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")
-                        </div>
-                    }
                 </div>
             </div>
-
-            @if (!string.IsNullOrEmpty(Model.DeltaQuill))
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-calendar3 text-muted me-2"></i>
+                    <div>
+                        <small class="text-muted d-block">Создана</small>
+                        <strong>@Model.CreatedAtUtc.ToString("dd.MM.yyyy HH:mm")</strong>
+                    </div>
+                </div>
+            </div>
+            @if (Model.ScheduledAtUtc.HasValue)
             {
-                <div class="mt-4">
-                    <h5 class="fw-bold mb-3">
-                        <i class="bi bi-file-text me-2 text-primary"></i>Содержание
-                    </h5>
-                    <div class="border rounded p-3 bg-light">
-                        <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">@Model.DeltaQuill</pre>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-clock text-muted me-2"></i>
+                        <div>
+                            <small class="text-muted d-block">Запланирована на</small>
+                            <strong>@Model.ScheduledAtUtc.Value.ToString("dd.MM.yyyy HH:mm")</strong>
+                        </div>
                     </div>
                 </div>
             }
+            @if (Model.PublishedAtUtc.HasValue)
+            {
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle text-muted me-2"></i>
+                        <div>
+                            <small class="text-muted d-block">Опубликована</small>
+                            <strong>@Model.PublishedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")</strong>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
 
-            <div class="mt-4">
-                <h5 class="fw-bold mb-3">
-                    <i class="bi bi-broadcast me-2 text-primary"></i>Цели публикации (@Model.Targets.Count)
-                </h5>
-                @if (Model.Targets.Any())
+@if (!string.IsNullOrEmpty(Model.Body))
+{
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-0 pb-0">
+            <h5 class="card-title mb-0 fw-bold">
+                <i class="bi bi-file-text me-2 text-primary"></i>Содержание
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="publication-content">
+                <p style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;">@Model.Body</p>
+            </div>
+        </div>
+    </div>
+}
+else if (!string.IsNullOrEmpty(Model.DeltaQuill))
+{
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-0 pb-0">
+            <h5 class="card-title mb-0 fw-bold">
+                <i class="bi bi-file-text me-2 text-primary"></i>Содержание
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="publication-content">
+                <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;">@Model.DeltaQuill</pre>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white border-0 pb-0">
+        <h5 class="card-title mb-0 fw-bold">
+            <i class="bi bi-broadcast me-2 text-primary"></i>Цели публикации (@Model.Targets.Count)
+        </h5>
+    </div>
+    <div class="card-body">
+        @if (Model.Targets.Any())
+        {
+            <div class="row g-3">
+                @foreach (var target in Model.Targets)
                 {
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Канал</th>
-                                    <th>Тип</th>
-                                    <th>Статус</th>
-                                    <th>Ошибка</th>
-                                    <th>Опубликовано</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var target in Model.Targets)
-                                {
-                                    <tr>
-                                        <td>
-                                            <a asp-controller="Channels" asp-action="Details" asp-route-id="@target.ChannelId" class="text-decoration-none">
-                                                @target.Channel.DisplayName
-                                            </a>
-                                        </td>
-                                        <td>
-                                            @if (target.ChannelType == SmmGab.Domain.Enums.ChannelType.Vk)
-                                            {
-                                                <span class="badge bg-primary">VK</span>
-                                            }
-                                            else if (target.ChannelType == SmmGab.Domain.Enums.ChannelType.Telegram)
-                                            {
-                                                <span class="badge bg-info">Telegram</span>
-                                            }
-                                        </td>
-                                        <td>
+                    <div class="col-md-6">
+                        <div class="card border target-card">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="target-icon me-3">
+                                        @if (target.ChannelType == SmmGab.Domain.Enums.ChannelType.Vk)
+                                        {
+                                            <div class="target-icon-bg bg-primary">
+                                                <i class="bi bi-chat-dots-fill text-white"></i>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="target-icon-bg bg-info">
+                                                <i class="bi bi-telegram text-white"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <a asp-controller="Channels" asp-action="Details" asp-route-id="@target.ChannelId" class="text-decoration-none fw-semibold d-block mb-2">
+                                            @target.Channel.DisplayName
+                                        </a>
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-@(target.ChannelType == SmmGab.Domain.Enums.ChannelType.Vk ? "primary" : "info")">
+                                                @target.ChannelType
+                                            </span>
                                             <span class="badge bg-@(target.Status == SmmGab.Domain.Enums.TargetStatus.Published ? "success" : 
                                                      target.Status == SmmGab.Domain.Enums.TargetStatus.Failed ? "danger" : 
                                                      target.Status == SmmGab.Domain.Enums.TargetStatus.Publishing ? "warning" : "secondary")">
                                                 @target.Status
                                             </span>
-                                        </td>
-                                        <td>
-                                            @if (!string.IsNullOrEmpty(target.LastError))
-                                            {
-                                                <span class="text-danger" title="@target.LastError" style="max-width: 300px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                    @target.LastError
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <text>-</text>
-                                            }
-                                        </td>
-                                        <td>@(target.PublishedAtUtc?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                                        </div>
+                                        @if (target.PublishedAtUtc.HasValue)
+                                        {
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="bi bi-calendar3 me-1"></i>@target.PublishedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")
+                                            </small>
+                                        }
+                                        @if (!string.IsNullOrEmpty(target.LastError))
+                                        {
+                                            <small class="text-danger d-block mt-1">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>@target.LastError
+                                            </small>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 }
-                else
-                {
-                    <p class="text-muted">Нет целей публикации</p>
-                }
             </div>
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <i class="bi bi-broadcast display-6 text-muted"></i>
+                <p class="text-muted mt-2 mb-0">Нет целей публикации</p>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .publication-icon-bg {
+        width: 60px;
+        height: 60px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+    }
+    
+    .target-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 0.5rem;
+    }
+    
+    .target-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .target-icon-bg {
+        width: 40px;
+        height: 40px;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+</style>
 
 @if (Model.Files != null && Model.Files.Any())
 {
@@ -176,6 +273,9 @@
                 }
                 <a asp-action="Index" class="btn btn-secondary">
                     <i class="bi bi-arrow-left me-2"></i>Назад к списку
+                </a>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>На главную
                 </a>
             </div>
         </div>

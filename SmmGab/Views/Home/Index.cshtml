@@ -2,38 +2,78 @@
     ViewData["Title"] = "Главная";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Добро пожаловать в SMM Planner</h1>
-    <p class="lead">Система планирования публикаций в социальных сетях</p>
+<div class="text-center mb-5">
+    <h1 class="display-4 fw-bold mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        Добро пожаловать в SMM Planner
+    </h1>
+    <p class="lead text-muted">Система планирования публикаций в социальных сетях</p>
 </div>
 
-<div class="row mt-5">
+<div class="row g-4 mt-4">
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Проекты</h5>
-                <p class="card-text">Управляйте своими проектами и каналами</p>
-                <a asp-controller="Projects" asp-action="Index" class="btn btn-primary">Перейти к проектам</a>
+        <div class="card home-card shadow-sm border-0 h-100">
+            <div class="card-body text-center p-4">
+                <div class="home-card-icon bg-primary mb-3">
+                    <i class="bi bi-folder text-white"></i>
+                </div>
+                <h5 class="card-title fw-bold mb-3">Проекты</h5>
+                <p class="card-text text-muted mb-4">Управляйте своими проектами и каналами</p>
+                <a asp-controller="Projects" asp-action="Index" class="btn btn-primary w-100">
+                    <i class="bi bi-arrow-right me-2"></i>Перейти к проектам
+                </a>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Публикации</h5>
-                <p class="card-text">Создавайте и планируйте публикации</p>
-                <a asp-controller="Publications" asp-action="Index" class="btn btn-primary">Перейти к публикациям</a>
+        <div class="card home-card shadow-sm border-0 h-100">
+            <div class="card-body text-center p-4">
+                <div class="home-card-icon bg-success mb-3">
+                    <i class="bi bi-file-post text-white"></i>
+                </div>
+                <h5 class="card-title fw-bold mb-3">Публикации</h5>
+                <p class="card-text text-muted mb-4">Создавайте и планируйте публикации</p>
+                <a asp-controller="Publications" asp-action="Index" class="btn btn-success w-100">
+                    <i class="bi bi-arrow-right me-2"></i>Перейти к публикациям
+                </a>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Календарь</h5>
-                <p class="card-text">Просматривайте запланированные публикации</p>
-                <a asp-controller="Publications" asp-action="Calendar" class="btn btn-primary">Открыть календарь</a>
+        <div class="card home-card shadow-sm border-0 h-100">
+            <div class="card-body text-center p-4">
+                <div class="home-card-icon bg-info mb-3">
+                    <i class="bi bi-calendar3 text-white"></i>
+                </div>
+                <h5 class="card-title fw-bold mb-3">Календарь</h5>
+                <p class="card-text text-muted mb-4">Просматривайте запланированные публикации</p>
+                <a asp-controller="Publications" asp-action="Calendar" class="btn btn-info w-100 text-white">
+                    <i class="bi bi-arrow-right me-2"></i>Открыть календарь
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .home-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 1rem;
+    }
+    
+    .home-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .home-card-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto;
+    }
+</style>
 

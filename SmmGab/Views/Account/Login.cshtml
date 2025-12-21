@@ -4,39 +4,52 @@
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-4">
-        <h2>@ViewData["Title"]</h2>
-        <section>
-            <form asp-controller="Account" asp-action="Login" method="post">
-                <div asp-validation-summary="All" class="text-danger"></div>
-                <div class="form-group mb-3">
-                    <label asp-for="Email"></label>
-                    <input asp-for="Email" class="form-control" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-                <div class="form-group mb-3">
-                    <label asp-for="Password"></label>
-                    <input asp-for="Password" class="form-control" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
-                <div class="form-group mb-3">
-                    <div class="checkbox">
-                        <label asp-for="RememberMe">
-                            <input asp-for="RememberMe" />
-                            @Html.DisplayNameFor(m => m.RememberMe)
+    <div class="col-md-5">
+        <div class="text-center mb-4">
+            <h1 class="display-5 fw-bold mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                Добро пожаловать
+            </h1>
+            <p class="text-muted">Войдите в свой аккаунт</p>
+        </div>
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-4">
+                <form asp-controller="Account" asp-action="Login" method="post">
+                    <div asp-validation-summary="All" class="alert alert-danger"></div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Email" class="form-label fw-semibold">
+                            <i class="bi bi-envelope me-2"></i>Email
                         </label>
+                        <input asp-for="Email" class="form-control" placeholder="Введите email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Войти</button>
-                </div>
-                <div class="form-group mt-3">
-                    <p>
-                        <a asp-controller="Account" asp-action="Register">Нет аккаунта? Зарегистрироваться</a>
-                    </p>
-                </div>
-            </form>
-        </section>
+                    <div class="form-group mb-3">
+                        <label asp-for="Password" class="form-label fw-semibold">
+                            <i class="bi bi-lock me-2"></i>Пароль
+                        </label>
+                        <input asp-for="Password" class="form-control" placeholder="Введите пароль" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <div class="form-check">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label">
+                                @Html.DisplayNameFor(m => m.RememberMe)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary w-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+                        </button>
+                    </div>
+                    <div class="form-group mt-3 text-center">
+                        <p class="mb-0">
+                            Нет аккаунта? <a asp-controller="Account" asp-action="Register" class="text-decoration-none fw-semibold">Зарегистрироваться</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
