@@ -127,6 +127,7 @@
                     <!-- Hidden inputs -->
                     <input type="hidden" asp-for="IsPublish" value="true" />
                     <input type="hidden" asp-for="UploadedFileIds" id="uploadedFileIds" />
+                    <input type="hidden" asp-for="Body" id="bodyHidden" />
                 </form>
             </div>
         </div>
@@ -334,8 +335,25 @@
                 existingInput.remove();
             }
             
+            // Синхронизируем Body перед отправкой
+            syncBodyField();
+            
             document.getElementById('publicationForm')?.submit();
         }
+
+        // Функция синхронизации Body textarea со скрытым полем
+        function syncBodyField() {
+            const bodyTextarea = document.querySelector('textarea[name="Body"]');
+            const bodyHidden = document.getElementById('bodyHidden');
+            if (bodyTextarea && bodyHidden) {
+                bodyHidden.value = bodyTextarea.value || '';
+            }
+        }
+
+        // Синхронизация Body перед отправкой формы
+        document.getElementById('publicationForm')?.addEventListener('submit', function(e) {
+            syncBodyField();
+        });
     </script>
     
     <style>
