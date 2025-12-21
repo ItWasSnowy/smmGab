@@ -316,8 +316,8 @@ public class TelegramPublisher : IPublisher
         {
             var captionText = caption.Length > 1024 ? caption.Substring(0, 1021) + "..." : caption;
             content.Add(new StringContent(captionText), "caption");
+            content.Add(new StringContent("HTML"), "parse_mode");
         }
-        content.Add(new StringContent("HTML"), "parse_mode");
         content.Add(new StreamContent(fileStream), "photo", image.StoredFileName);
 
         try
@@ -388,8 +388,8 @@ public class TelegramPublisher : IPublisher
         {
             var captionText = caption.Length > 1024 ? caption.Substring(0, 1021) + "..." : caption;
             content.Add(new StringContent(captionText), "caption");
+            content.Add(new StringContent("HTML"), "parse_mode");
         }
-        content.Add(new StringContent("HTML"), "parse_mode");
         content.Add(new StreamContent(fileStream), "video", video.StoredFileName);
 
         try
@@ -460,8 +460,8 @@ public class TelegramPublisher : IPublisher
         {
             var captionText = caption.Length > 1024 ? caption.Substring(0, 1021) + "..." : caption;
             content.Add(new StringContent(captionText), "caption");
+            content.Add(new StringContent("HTML"), "parse_mode");
         }
-        content.Add(new StringContent("HTML"), "parse_mode");
         content.Add(new StreamContent(fileStream), "document", document.StoredFileName);
 
         try
@@ -537,13 +537,23 @@ public class TelegramPublisher : IPublisher
         foreach (var item in allFiles.Take(10))
         {
             var fileId = $"attach://{item.File.Id}";
-            media.Add(new
+            var isFirst = media.Count == 0;
+            
+            // Создаем объект медиа
+            var mediaItem = new Dictionary<string, object>
             {
-                type = item.Type,
-                media = fileId,
-                caption = media.Count == 0 ? captionText : null,
-                parse_mode = "HTML"
-            });
+                { "type", item.Type },
+                { "media", fileId }
+            };
+            
+            // Добавляем caption и parse_mode только для первого элемента и только если caption не пустой
+            if (isFirst && !string.IsNullOrEmpty(captionText))
+            {
+                mediaItem["caption"] = captionText;
+                mediaItem["parse_mode"] = "HTML";
+            }
+            
+            media.Add(mediaItem);
         }
 
         try
