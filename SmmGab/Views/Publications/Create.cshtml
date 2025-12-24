@@ -128,6 +128,7 @@
                     <input type="hidden" asp-for="IsPublish" value="true" />
                     <input type="hidden" asp-for="UploadedFileIds" id="uploadedFileIds" />
                     <input type="hidden" asp-for="Body" id="bodyHidden" />
+                    <input type="hidden" asp-for="ClientTimezoneMinutes" id="clientTimezoneMinutes" />
                 </form>
             </div>
         </div>
@@ -188,16 +189,18 @@
         const uploadedFileIds = [];
         
         // Toggle scheduled date
-        document.getElementById('isLater')?.addEventListener('change', function() {
+        document.querySelector('input[name="IsLater"]')?.addEventListener('change', function() {
             document.getElementById('scheduledDateGroup').style.display = this.checked ? 'block' : 'none';
             if (this.checked) {
-                document.getElementById('isNow').checked = false;
+                const isNowCheckbox = document.querySelector('input[name="IsNow"]');
+                if (isNowCheckbox) isNowCheckbox.checked = false;
             }
         });
 
-        document.getElementById('isNow')?.addEventListener('change', function() {
+        document.querySelector('input[name="IsNow"]')?.addEventListener('change', function() {
             if (this.checked) {
-                document.getElementById('isLater').checked = false;
+                const isLaterCheckbox = document.querySelector('input[name="IsLater"]');
+                if (isLaterCheckbox) isLaterCheckbox.checked = false;
                 document.getElementById('scheduledDateGroup').style.display = 'none';
             }
         });
@@ -222,6 +225,14 @@
                 }
             });
         });
+
+        // Capture client timezone offset (minutes, positive = behind UTC)
+        (() => {
+            const tzInput = document.getElementById('clientTimezoneMinutes');
+            if (tzInput) {
+                tzInput.value = new Date().getTimezoneOffset();
+            }
+        })();
 
         // Handle file upload
         document.getElementById('mediaFiles')?.addEventListener('change', async function(e) {

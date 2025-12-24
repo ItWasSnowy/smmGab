@@ -194,7 +194,19 @@ public class PublicationsController : Controller
         }
 
         var now = DateTime.UtcNow;
-        DateTime? scheduledAt = model.IsNow ? now : (model.IsLater && model.ScheduledAtUtc.HasValue ? model.ScheduledAtUtc.Value.ToUniversalTime() : null);
+        DateTime? scheduledAt = null;
+        if (model.IsNow)
+        {
+            scheduledAt = now;
+        }
+        else if (model.IsLater && model.ScheduledAtUtc.HasValue)
+        {
+            // Время приходит без таймзоны (datetime-local). Корректируем с учетом часового пояса клиента.
+            var local = DateTime.SpecifyKind(model.ScheduledAtUtc.Value, DateTimeKind.Unspecified);
+            var offsetMinutes = model.ClientTimezoneMinutes ?? 0; // getTimezoneOffset(): +запад, -восток (например, UTC+5 -> -300)
+            // UTC = local + offsetMinutes (getTimezoneOffset вернёт -300 для UTC+5)
+            scheduledAt = DateTime.SpecifyKind(local + TimeSpan.FromMinutes(offsetMinutes), DateTimeKind.Utc);
+        }
 
         var publication = new Domain.Models.Publication
         {

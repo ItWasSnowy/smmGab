@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using SmmGab.Application.Abstractions;
 using SmmGab.Background;
 using SmmGab.Data;
@@ -11,6 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 var connectionString = builder.Configuration.GetConnectionString("Default");
+
+// Ensure database exists before wiring DbContext
+CreateDatabaseIfNotExists(connectionString);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -126,6 +130,36 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapControllers();
+// Creates the PostgreSQL database if it does not exist.
+static void CreateDatabaseIfNotExists(string? connectionString)
+{
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException("Connection string 'Default' is not configured.");
+    }
+
+    var builder = new NpgsqlConnectionStringBuilder(connectionString);
+
+    // Connect to the maintenance database to issue CREATE DATABASE
+    var adminBuilder = new NpgsqlConnectionStringBuilder(connectionString)
+    {
+        Database = "postgres"
+    };
+
+    using var connection = new NpgsqlConnection(adminBuilder.ConnectionString);
+    connection.Open();
+
+    using var cmd = connection.CreateCommand();
+    cmd.CommandText = $"SELECT 1 FROM pg_database WHERE datname = @dbName";
+    cmd.Parameters.AddWithValue("dbName", builder.Database);
+
+    var exists = cmd.ExecuteScalar() is not null;
+    if (!exists)
+    {
+        cmd.CommandText = $"CREATE DATABASE \"{builder.Database}\"";
+        cmd.Parameters.Clear();
+        cmd.ExecuteNonQuery();
+    }
+}
 
 app.Run();

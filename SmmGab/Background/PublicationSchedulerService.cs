@@ -184,8 +184,13 @@ public class PublicationSchedulerService : BackgroundService
             if (publications.Count == 0)
                 return;
 
-            var tasks = publications.Select(pub => ProcessPublicationAsync(pub, context, publisherFactory, cancellationToken));
-            await Task.WhenAll(tasks);
+            _logger.LogInformation("Found {Count} scheduled publications ready to process", publications.Count);
+
+            // Обрабатываем публикации последовательно, чтобы избежать конфликтов DbContext
+            foreach (var pub in publications)
+            {
+                await ProcessPublicationAsync(pub, context, publisherFactory, cancellationToken);
+            }
         }
         catch (PostgresException ex) when (ex.SqlState == "42P01") // Таблица не существует
         {
@@ -210,10 +215,11 @@ public class PublicationSchedulerService : BackgroundService
             publication.Status = PublicationStatus.Publishing;
             await context.SaveChangesAsync(cancellationToken);
 
-            var tasks = publication.Targets.Select(target => 
-                PublishTargetAsync(target, publication, publisherFactory, context, cancellationToken));
-
-            await Task.WhenAll(tasks);
+            // Обрабатываем цели последовательно, чтобы не писать в один DbContext из разных потоков
+            foreach (var target in publication.Targets)
+            {
+                await PublishTargetAsync(target, publication, publisherFactory, context, cancellationToken);
+            }
 
             publication.Status = publication.Targets.All(t => t.Status == TargetStatus.Published)
                 ? PublicationStatus.Published
