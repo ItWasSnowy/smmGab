@@ -3,50 +3,41 @@
     ViewData["Title"] = "Проекты";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="d-flex align-items-center gap-3">
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Назад
-        </a>
-        <h2 class="mb-0">Проекты</h2>
+<div class="pf-page-header pf-animate">
+    <div>
+        <h1 class="pf-page-title">Проекты</h1>
     </div>
-    <a asp-controller="Projects" asp-action="Create" class="btn btn-primary">Создать проект</a>
+    <a asp-controller="Projects" asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus me-1"></i>Создать проект
+    </a>
 </div>
 
 @if (Model.Any())
 {
-    <div class="row g-4">
+    <div class="row g-3 pf-animate pf-animate-delay-1">
         @foreach (var project in Model)
         {
             <div class="col-md-6 col-lg-4">
-                <div class="card project-card shadow-sm border-0 h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start mb-3">
-                            <div class="project-icon-bg bg-primary me-3">
-                                <i class="bi bi-folder text-white"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="card-title fw-bold mb-2">@project.Name</h5>
-                                <div class="d-flex align-items-center text-muted small">
-                                    <i class="bi bi-calendar3 me-2"></i>
-                                    <span>Создан: @project.CreatedAtUtc.ToString("dd.MM.yyyy")</span>
-                                </div>
-                            </div>
+                <div class="pf-item-card d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="pf-icon-badge" style="background:rgba(255,77,109,0.14);color:var(--accent);">
+                            <i class="bi bi-folder2"></i>
                         </div>
-                        
-                        <div class="project-stats mb-3">
-                            <div class="d-flex justify-content-between small text-muted mb-2">
-                                <span><i class="bi bi-broadcast me-1"></i>Каналов: @project.Channels.Count</span>
-                                <span><i class="bi bi-file-post me-1"></i>Публикаций: @project.Publications.Count</span>
+                        <div>
+                            <div style="font-weight:700;font-size:0.9rem;">@project.Name</div>
+                            <div style="font-size:0.72rem;color:var(--muted);">
+                                <i class="bi bi-calendar3 me-1"></i>@project.CreatedAtUtc.ToString("dd.MM.yyyy")
                             </div>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id" class="btn btn-outline-primary">
-                                <i class="bi bi-eye me-1"></i>Подробнее
-                            </a>
                         </div>
                     </div>
+                    <div style="border-top:1px solid var(--glass-border);padding-top:10px;display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);">
+                        <span><i class="bi bi-broadcast me-1"></i>@project.Channels.Count каналов</span>
+                        <span><i class="bi bi-file-post me-1"></i>@project.Publications.Count публикаций</span>
+                    </div>
+                    <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id"
+                       class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-eye me-1"></i>Подробнее
+                    </a>
                 </div>
             </div>
         }
@@ -54,41 +45,14 @@
 }
 else
 {
-    <div class="card shadow-sm border-0">
+    <div class="card pf-animate">
         <div class="card-body text-center py-5">
-            <i class="bi bi-folder-x display-1 text-muted mb-3"></i>
-            <h5 class="text-muted mb-3">У вас пока нет проектов</h5>
-            <a asp-controller="Projects" asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-2"></i>Создайте первый проект
+            <i class="bi bi-folder-x" style="font-size:3rem;color:var(--muted);opacity:0.35;"></i>
+            <p class="text-muted mt-3 mb-3" style="font-size:0.875rem;">У вас пока нет проектов</p>
+            <a asp-controller="Projects" asp-action="Create" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus me-1"></i>Создайте первый проект
             </a>
         </div>
     </div>
 }
-
-<style>
-    .project-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        border-radius: 1rem;
-    }
-    
-    .project-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-    }
-    
-    .project-icon-bg {
-        width: 50px;
-        height: 50px;
-        border-radius: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
-    
-    .project-stats {
-        border-top: 1px solid #e9ecef;
-        padding-top: 1rem;
-    }
-</style>
 

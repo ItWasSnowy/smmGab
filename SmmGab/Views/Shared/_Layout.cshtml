@@ -1,53 +1,154 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" id="appHtml">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SMM Planner</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <title>@ViewData["Title"] - Planify</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script>
+        // Apply saved theme before render to avoid flash
+        (function(){
+            var t = localStorage.getItem('planify-theme');
+            if (t === 'light') document.documentElement.classList.add('light');
+        })();
+    </script>
 </head>
 <body>
-    @if (User.Identity?.IsAuthenticated == false)
-    {
-        <header>
-            <nav class="navbar navbar-expand-lg navbar-dark bg-gradient border-bottom shadow-sm">
-                <div class="container-fluid">
-                    <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-broadcast me-2"></i>SMM Planner
-                    </a>
-                    <div class="navbar-collapse collapse d-lg-inline-flex justify-content-end">
-                        <ul class="navbar-nav">
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">
-                                    <i class="bi bi-box-arrow-in-right me-1"></i>Вход
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Register">
-                                    <i class="bi bi-person-plus me-1"></i>Регистрация
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    var path = Context.Request.Path.Value ?? "";
+    var userName = User.Identity?.Name ?? "";
+    var userInitial = userName.Length > 0 ? userName[0].ToString().ToUpper() : "?";
+    var projectName = ViewData["ProjectName"] as string;
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="sidebar-logo">
+                <a asp-controller="Home" asp-action="Index" class="sidebar-logo-text">Plani<span>fy</span></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Навигация</div>
+                <a asp-controller="Home" asp-action="Index"
+                   class="sidebar-link @(path.StartsWith("/Home") || path == "/" ? "active" : "")">
+                    <i class="bi bi-grid-1x2"></i> Дашборд
+                </a>
+                <a asp-controller="Publications" asp-action="Index"
+                   class="sidebar-link @(path.StartsWith("/Publications/Index") || path.StartsWith("/Publications") && !path.Contains("Calendar") && !path.Contains("Create") && !path.Contains("Details") ? "active" : "")">
+                    <i class="bi bi-file-post"></i> Публикации
+                </a>
+                <a asp-controller="Publications" asp-action="Calendar"
+                   class="sidebar-link @(path.Contains("Calendar") ? "active" : "")">
+                    <i class="bi bi-calendar3"></i> Календарь
+                </a>
+                <div class="sidebar-section-label" style="margin-top:8px;">Управление</div>
+                <a asp-controller="Channels" asp-action="Index"
+                   class="sidebar-link @(path.StartsWith("/Channels") ? "active" : "")">
+                    <i class="bi bi-broadcast"></i> Каналы
+                </a>
+                <a asp-controller="Projects" asp-action="Index"
+                   class="sidebar-link @(path.StartsWith("/Projects") ? "active" : "")">
+                    <i class="bi bi-folder2"></i> Проекты
+                </a>
             </nav>
-        </header>
-    }
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-user-avatar">@userInitial</div>
+                    <div class="sidebar-user-name">@userName</div>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="sidebar-logout" title="Выйти">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </aside>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+        <!-- Main area -->
+        <div class="app-main">
+            <header class="app-header">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="sidebar-toggle d-lg-none" id="sidebarToggle"
+                            style="background:none;border:none;color:var(--muted);font-size:1.2rem;padding:0;cursor:pointer;">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="app-header-title">@(ViewData["Title"] ?? "Planify")</div>
+                </div>
+                <div class="app-header-actions">
+                    @if (!string.IsNullOrEmpty(projectName))
+                    {
+                        <span class="pf-project-badge">
+                            <i class="bi bi-folder2 me-1"></i>@projectName
+                        </span>
+                    }
+                    <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+                        <span class="toggle-track">
+                            <span class="toggle-icons">
+                                <span class="icon-moon">🌙</span>
+                                <span class="icon-sun">☀️</span>
+                            </span>
+                            <span class="toggle-thumb"></span>
+                        </span>
+                    </button>
+                </div>
+            </header>
+            <div class="app-content">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Unauthenticated: minimal header -->
+    <header style="position:fixed;top:0;left:0;right:0;z-index:500;padding:18px 32px;
+                   display:flex;align-items:center;justify-content:space-between;
+                   background:linear-gradient(to bottom,var(--bg2),transparent);">
+        <a asp-controller="Home" asp-action="Index"
+           style="font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;
+                  letter-spacing:-0.02em;color:var(--text);text-decoration:none;">
+            Plani<span style="color:var(--accent)">fy</span>
+        </a>
+        <div style="display:flex;gap:10px;align-items:center;">
+            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary btn-sm">Войти</a>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm">Регистрация</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+                <span class="toggle-track">
+                    <span class="toggle-icons">
+                        <span class="icon-moon">🌙</span>
+                        <span class="icon-sun">☀️</span>
+                    </span>
+                    <span class="toggle-thumb"></span>
+                </span>
+            </button>
+        </div>
+    </header>
+    <div style="padding-top:70px;">
+        @RenderBody()
+    </div>
+}
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Theme toggle
+        const _html = document.getElementById('appHtml');
+        document.getElementById('themeToggle')?.addEventListener('click', function () {
+            _html.classList.toggle('light');
+            localStorage.setItem('planify-theme', _html.classList.contains('light') ? 'light' : 'dark');
+        });
+        // Mobile sidebar
+        document.getElementById('sidebarToggle')?.addEventListener('click', function () {
+            document.getElementById('appSidebar')?.classList.toggle('open');
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-

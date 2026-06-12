@@ -1,553 +1,282 @@
 @model SmmGab.Controllers.CreatePublicationViewModel
 @{
     ViewData["Title"] = "Создать публикацию";
-    var project = ViewBag.Project as SmmGab.Domain.Models.Project;
+    ViewData["ProjectName"] = (ViewBag.Project as SmmGab.Domain.Models.Project)?.Name;
     var channels = ViewBag.Channels as List<SmmGab.Domain.Models.Channel> ?? new List<SmmGab.Domain.Models.Channel>();
 }
 
-<div class="publication-editor-container">
-    <div class="row g-0 h-100">
-        <!-- Left Sidebar - Settings -->
-        <div class="col-lg-4 publication-sidebar">
-            <div class="sidebar-content">
-                <!-- Header -->
-                <div class="sidebar-header mb-4">
-                    <a asp-controller="Home" asp-action="Dashboard" asp-route-id="@ViewBag.Project?.Id" class="btn btn-outline-light mb-3">
-                        <i class="bi bi-arrow-left me-2"></i>Назад к Dashboard
-                    </a>
-                    <h3 class="text-white mb-0 fw-bold">Редактирование статьи</h3>
+<div class="pf-editor-wrap" style="margin:-28px;">
+
+    <!-- ─── Left Settings Sidebar ─── -->
+    <aside class="pf-editor-sidebar">
+        <form asp-action="Create" method="post" enctype="multipart/form-data" id="publicationForm">
+            <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+
+            <!-- Title field -->
+            <div class="pf-block">
+                <div class="pf-block-title"><i class="bi bi-pencil"></i>Название</div>
+                <input asp-for="Text" class="form-control" placeholder="Новая публикация" />
+                <span asp-validation-for="Text" class="text-danger" style="font-size:0.72rem;"></span>
+            </div>
+
+            @if (ViewBag.Project != null)
+            {
+                <div class="pf-block">
+                    <div class="pf-block-title"><i class="bi bi-folder2"></i>Проект</div>
+                    <div style="font-size:0.875rem;color:var(--text);">@ViewBag.Project.Name</div>
                 </div>
+            }
 
-                <form asp-action="Create" method="post" enctype="multipart/form-data" id="publicationForm">
-                    <div asp-validation-summary="All" class="alert alert-danger"></div>
+            <!-- Publishing schedule -->
+            <div class="pf-block">
+                <div class="pf-block-title"><i class="bi bi-clock"></i>Публикация</div>
+                <label class="pf-toggle-option @(Model.IsNow ? "active" : "")" id="optNow">
+                    <span><i class="bi bi-lightning me-2"></i>Немедленно</span>
+                    <input type="checkbox" asp-for="IsNow" />
+                    <i class="bi @(Model.IsNow ? "bi-check-circle-fill" : "bi-circle") check-icon"></i>
+                </label>
+                <label class="pf-toggle-option @(Model.IsLater ? "active" : "")" id="optLater">
+                    <span><i class="bi bi-calendar-event me-2"></i>Запланировать</span>
+                    <input type="checkbox" asp-for="IsLater" />
+                    <i class="bi @(Model.IsLater ? "bi-check-circle-fill" : "bi-circle") check-icon"></i>
+                </label>
+                <div id="scheduledDateGroup" style="display:@(Model.IsLater ? "block" : "none");margin-top:10px;">
+                    <input asp-for="ScheduledAtUtc" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="ScheduledAtUtc" class="text-danger" style="font-size:0.72rem;"></span>
+                </div>
+            </div>
 
-                    <!-- Основные настройки -->
-                    <div class="settings-section mb-4">
-                        <div class="section-header mb-3">
-                            <i class="bi bi-gear me-2"></i>
-                            <span class="fw-semibold">Основные настройки</span>
-                        </div>
-                        @if (ViewBag.Project != null)
+            <!-- Channels -->
+            <div class="pf-block">
+                <div class="pf-block-title"><i class="bi bi-broadcast"></i>Каналы</div>
+                @if (channels.Any())
+                {
+                    <div style="max-height:220px;overflow-y:auto;">
+                        @foreach (var channel in channels)
                         {
-                            <div class="form-group mb-3">
-                                <label class="form-label small text-muted">Проект</label>
-                                <div class="form-control form-control-sm bg-light" style="border: none;">
-                                    <i class="bi bi-folder me-2"></i>@ViewBag.Project.Name
+                            <label class="pf-channel-item" style="cursor:pointer;margin-bottom:6px;" for="channel_@channel.Id">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi @(channel.Type == SmmGab.Domain.Enums.ChannelType.Vk ? "bi-chat-dots-fill" : "bi-telegram")"
+                                       style="color:@(channel.Type == SmmGab.Domain.Enums.ChannelType.Vk ? "#0077ff" : "#0088cc");"></i>
+                                    <div>
+                                        <div style="font-size:0.82rem;font-weight:600;">@channel.DisplayName</div>
+                                        <div style="font-size:0.68rem;color:var(--muted);">@channel.Type</div>
+                                    </div>
                                 </div>
-                            </div>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="ChannelIds" value="@channel.Id"
+                                           id="channel_@channel.Id" />
+                                </div>
+                            </label>
                         }
-                        <div class="form-group mb-3">
-                            <label asp-for="Text" class="form-label small text-muted">Название статьи</label>
-                            <input asp-for="Text" class="form-control form-control-sm" placeholder="Новая публикация" />
-                            <span asp-validation-for="Text" class="text-danger small"></span>
-                        </div>
                     </div>
-                    
-                    <!-- Hidden input for ProjectId -->
-                    <input type="hidden" asp-for="ProjectId" />
-
-                    <!-- Статус публикации -->
-                    <div class="settings-section mb-4">
-                        <div class="section-header mb-3">
-                            <i class="bi bi-circle-fill me-2" style="font-size: 0.5rem;"></i>
-                            <span class="fw-semibold">Статус публикации</span>
-                        </div>
-                        <div class="status-box">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-pencil me-2"></i>
-                                <span>Черновик</span>
-                            </div>
-                        </div>
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <i class="bi bi-broadcast" style="font-size:1.8rem;color:var(--muted);opacity:0.4;"></i>
+                        <p class="text-muted mt-2 mb-0" style="font-size:0.78rem;">Нет доступных каналов</p>
                     </div>
+                }
+            </div>
 
-                    <!-- Планирование публикации -->
-                    <div class="settings-section mb-4">
-                        <div class="section-header mb-3">
-                            <i class="bi bi-clock me-2"></i>
-                            <span class="fw-semibold">Планирование публикации</span>
-                        </div>
-                        <div class="toggle-options d-flex flex-column gap-2">
-                            <label class="toggle-option @(Model.IsNow ? "active" : "")">
-                                <input type="checkbox" asp-for="IsNow" class="form-check-input" />
-                                Отправить немедленно
-                            </label>
-                            <label class="toggle-option @(Model.IsLater ? "active" : "")">
-                                <input type="checkbox" asp-for="IsLater" class="form-check-input" />
-                                Запланировать
-                            </label>
-                        </div>
-                        <div class="form-group mt-3" id="scheduledDateGroup" style="display: @(Model.IsLater ? "block" : "none");">
-                            <label asp-for="ScheduledAtUtc" class="form-label small text-muted"></label>
-                            <input asp-for="ScheduledAtUtc" type="datetime-local" class="form-control form-control-sm" />
-                            <span asp-validation-for="ScheduledAtUtc" class="text-danger small"></span>
-                        </div>
-                    </div>
+            <!-- Hidden inputs -->
+            <input type="hidden" asp-for="ProjectId" />
+            <input type="hidden" asp-for="IsPublish" id="isPublishInput" value="true" />
+            <input type="hidden" asp-for="UploadedFileIds" id="uploadedFileIds" />
+            <input type="hidden" name="Body" id="bodyHidden" />
+            <input type="hidden" asp-for="ClientTimezoneMinutes" id="clientTimezoneMinutes" />
+        </form>
+    </aside>
 
-                    <!-- Каналы для публикации -->
-                    <div class="settings-section mb-4">
-                        <div class="section-header mb-3">
-                            <i class="bi bi-broadcast me-2"></i>
-                            <span class="fw-semibold">Каналы для публикации</span>
-                        </div>
-                        <div class="channels-list">
-                            @foreach (var channel in channels)
-                            {
-                                <div class="channel-item" data-project-id="@channel.ProjectId">
-                                    <div class="d-flex align-items-center">
-                                        @if (channel.Type == SmmGab.Domain.Enums.ChannelType.Vk)
-                                        {
-                                            <i class="bi bi-chat-dots-fill text-primary me-2"></i>
-                                        }
-                                        else if (channel.Type == SmmGab.Domain.Enums.ChannelType.Telegram)
-                                        {
-                                            <i class="bi bi-telegram text-info me-2"></i>
-                                        }
-                                        <div class="flex-grow-1">
-                                            <div class="fw-semibold small">@channel.DisplayName</div>
-                                            <div class="text-muted" style="font-size: 0.75rem;">@channel.Type</div>
-                                        </div>
-                                    </div>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input channel-checkbox" type="checkbox" 
-                                               name="ChannelIds" value="@channel.Id" 
-                                               id="channel_@channel.Id" />
-                                    </div>
-                                </div>
-                            }
-                            @if (!channels.Any())
-                            {
-                                <div class="text-center text-muted py-3">
-                                    <i class="bi bi-broadcast display-6"></i>
-                                    <p class="small mt-2 mb-0">Нет доступных каналов</p>
-                                </div>
-                            }
-                        </div>
-                    </div>
+    <!-- ─── Main Editor Area ─── -->
+    <div class="pf-editor-main">
 
-                    <!-- Hidden inputs -->
-                    <input type="hidden" asp-for="IsPublish" value="true" />
-                    <input type="hidden" asp-for="UploadedFileIds" id="uploadedFileIds" />
-                    <input type="hidden" asp-for="Body" id="bodyHidden" />
-                    <input type="hidden" asp-for="ClientTimezoneMinutes" id="clientTimezoneMinutes" />
-                </form>
+        <!-- Header actions bar -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a asp-controller="Home" asp-action="Dashboard" asp-route-id="@ViewBag.Project?.Id"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Назад
+            </a>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="saveAsDraft()">
+                    <i class="bi bi-floppy me-1"></i>Черновик
+                </button>
+                <button type="submit" form="publicationForm" class="btn btn-primary btn-sm" onclick="syncBody()">
+                    <i class="bi bi-send me-1"></i>Опубликовать
+                </button>
             </div>
         </div>
 
-        <!-- Right Content Area - Editor -->
-        <div class="col-lg-8 publication-editor">
-            <div class="editor-content">
-                <!-- Action Buttons -->
-                <div class="editor-header mb-3">
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-success" onclick="saveAsDraft()">
-                            <i class="bi bi-check-circle me-2"></i>Сохранить как черновик
-                        </button>
-                        <button type="submit" form="publicationForm" class="btn btn-primary">
-                            <i class="bi bi-send me-2"></i>Опубликовать
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Main Editor -->
-                <div class="editor-main">
-                    <label asp-for="Body" class="form-label small fw-semibold mb-2">
-                        <i class="bi bi-text-paragraph me-2"></i>Текст публикации
-                    </label>
-                    <textarea asp-for="Body" class="form-control" rows="15" placeholder="Введите текст публикации..."></textarea>
-                    <span asp-validation-for="Body" class="text-danger"></span>
-                </div>
-
-                <!-- Media Upload Section -->
-                <div class="media-upload-section mt-3">
-                    <label class="form-label small fw-semibold mb-2">
-                        <i class="bi bi-images me-2"></i>Медиа файлы
-                    </label>
-                    <div class="border rounded p-3 bg-light">
-                        <input type="file" class="form-control form-control-sm" id="mediaFiles" 
-                               name="MediaFiles" multiple accept="image/*,video/*,.pdf" />
-                        <small class="form-text text-muted">
-                            Поддерживаемые форматы: JPG, PNG, GIF, WebP, MP4, AVI, MOV, PDF (макс. 2GB)
-                        </small>
-                        
-                        <!-- Upload Progress -->
-                        <div id="uploadProgress" class="progress mt-2" style="display: none;">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-                        </div>
-
-                        <!-- Uploaded Files Preview -->
-                        <div id="uploadedFilesPreview" class="row g-2 mt-2"></div>
-                    </div>
-                </div>
+        <!-- Quill text editor -->
+        <div class="mb-3">
+            <div class="pf-block-title" style="margin-bottom:10px;">
+                <i class="bi bi-text-paragraph me-1"></i>Текст публикации
             </div>
+            <div id="quillEditor"></div>
+            <span asp-validation-for="Body" class="text-danger" style="font-size:0.78rem;"></span>
+        </div>
+
+        <!-- Media upload -->
+        <div>
+            <div class="pf-block-title" style="margin-bottom:10px;">
+                <i class="bi bi-images me-1"></i>Медиа файлы
+            </div>
+            <div class="pf-media-zone" id="mediaDropZone">
+                <input type="file" id="mediaFiles" name="MediaFiles"
+                       multiple accept="image/*,video/*,.pdf"
+                       style="display:none;" />
+                <i class="bi bi-cloud-upload" style="font-size:2rem;color:var(--muted);"></i>
+                <p class="text-muted mb-2 mt-2" style="font-size:0.875rem;">
+                    Перетащите файлы или
+                    <button type="button" class="btn btn-sm btn-outline-secondary ms-1" onclick="document.getElementById('mediaFiles').click()">
+                        Выбрать
+                    </button>
+                </p>
+                <p class="text-muted mb-0" style="font-size:0.72rem;">JPG, PNG, GIF, WebP, MP4, PDF — до 2&nbsp;ГБ</p>
+            </div>
+
+            <div id="uploadProgress" class="progress mt-3" style="display:none;height:4px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:0%"></div>
+            </div>
+
+            <div id="uploadedFilesPreview" class="row g-2 mt-2"></div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script>
-        const uploadedFileIds = [];
-        
-        // Toggle scheduled date
-        document.querySelector('input[name="IsLater"]')?.addEventListener('change', function() {
-            document.getElementById('scheduledDateGroup').style.display = this.checked ? 'block' : 'none';
-            if (this.checked) {
-                const isNowCheckbox = document.querySelector('input[name="IsNow"]');
-                if (isNowCheckbox) isNowCheckbox.checked = false;
+        // ─── Quill init ───
+        const quill = new Quill('#quillEditor', {
+            theme: 'snow',
+            placeholder: 'Введите текст публикации…',
+            modules: {
+                toolbar: [
+                    [{ header: [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    ['blockquote', 'code-block'],
+                    ['link'],
+                    ['clean']
+                ]
             }
         });
 
-        document.querySelector('input[name="IsNow"]')?.addEventListener('change', function() {
-            if (this.checked) {
-                const isLaterCheckbox = document.querySelector('input[name="IsLater"]');
-                if (isLaterCheckbox) isLaterCheckbox.checked = false;
-                document.getElementById('scheduledDateGroup').style.display = 'none';
-            }
-        });
+        // Populate from model value if present
+        const existingBody = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Body ?? ""));
+        if (existingBody) quill.root.innerHTML = existingBody;
 
-        // Update toggle option styles
-        document.querySelectorAll('.toggle-option').forEach(option => {
-            const checkbox = option.querySelector('input[type="checkbox"]');
-            checkbox?.addEventListener('change', function() {
-                if (this.checked) {
-                    option.classList.add('active');
-                    // Uncheck the other option
-                    const otherOption = option.closest('.toggle-options')?.querySelector('.toggle-option:not(.active)');
-                    if (otherOption) {
-                        const otherCheckbox = otherOption.querySelector('input[type="checkbox"]');
-                        if (otherCheckbox) {
-                            otherCheckbox.checked = false;
-                            otherOption.classList.remove('active');
-                        }
-                    }
-                } else {
-                    option.classList.remove('active');
-                }
-            });
-        });
-
-        // Capture client timezone offset (minutes, positive = behind UTC)
-        (() => {
-            const tzInput = document.getElementById('clientTimezoneMinutes');
-            if (tzInput) {
-                tzInput.value = new Date().getTimezoneOffset();
-            }
-        })();
-
-        // Handle file upload
-        document.getElementById('mediaFiles')?.addEventListener('change', async function(e) {
-            const files = Array.from(e.target.files);
-            if (files.length === 0) return;
-
-            const progressBar = document.getElementById('uploadProgress');
-            const progressBarFill = progressBar?.querySelector('.progress-bar');
-            const previewContainer = document.getElementById('uploadedFilesPreview');
-            
-            if (progressBar) progressBar.style.display = 'block';
-            if (progressBarFill) progressBarFill.style.width = '0%';
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const formData = new FormData();
-                formData.append('file', file);
-
-                try {
-                    if (progressBarFill) {
-                        progressBarFill.style.width = `${((i + 1) / files.length) * 100}%`;
-                    }
-                    
-                    const response = await fetch('/api/files/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Ошибка загрузки файла');
-                    }
-
-                    const fileData = await response.json();
-                    uploadedFileIds.push(fileData.id);
-                    const uploadedFileIdsInput = document.getElementById('uploadedFileIds');
-                    if (uploadedFileIdsInput) {
-                        uploadedFileIdsInput.value = uploadedFileIds.join(',');
-                    }
-
-                    addFilePreview(fileData, file);
-                } catch (error) {
-                    console.error('Error uploading file:', error);
-                    alert(`Ошибка загрузки файла ${file.name}: ${error.message}`);
-                }
-            }
-
-            if (progressBar) progressBar.style.display = 'none';
-            e.target.value = '';
-        });
-
-        function addFilePreview(fileData, originalFile) {
-            const previewContainer = document.getElementById('uploadedFilesPreview');
-            if (!previewContainer) return;
-            
-            const col = document.createElement('div');
-            col.className = 'col-md-3 col-sm-4 col-6';
-            
-            const isImage = fileData.type === 'Image';
-            const isVideo = fileData.type === 'Video';
-            
-            col.innerHTML = `
-                <div class="card border position-relative file-preview-card">
-                    ${isImage ? `
-                        <img src="/api/files/${fileData.id}/download" class="card-img-top" style="height: 100px; object-fit: cover;" alt="${fileData.storedFileName}">
-                    ` : isVideo ? `
-                        <div class="card-img-top bg-dark d-flex align-items-center justify-content-center" style="height: 100px;">
-                            <i class="bi bi-play-circle text-white"></i>
-                        </div>
-                    ` : `
-                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 100px;">
-                            <i class="bi bi-file-earmark text-primary"></i>
-                        </div>
-                    `}
-                    <div class="card-body p-1">
-                        <small class="text-muted d-block text-truncate" title="${originalFile.name}" style="font-size: 0.7rem;">${originalFile.name}</small>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 remove-file-btn" 
-                            data-file-id="${fileData.id}" style="opacity: 0.9; padding: 0.25rem 0.5rem;">
-                        <i class="bi bi-x"></i>
-                    </button>
-                </div>
-            `;
-            
-            previewContainer.appendChild(col);
-
-            col.querySelector('.remove-file-btn')?.addEventListener('click', function() {
-                const fileId = this.getAttribute('data-file-id');
-                const index = uploadedFileIds.indexOf(fileId);
-                if (index > -1) {
-                    uploadedFileIds.splice(index, 1);
-                    const uploadedFileIdsInput = document.getElementById('uploadedFileIds');
-                    if (uploadedFileIdsInput) {
-                        uploadedFileIdsInput.value = uploadedFileIds.join(',');
-                    }
-                }
-                col.remove();
-            });
+        function syncBody() {
+            document.getElementById('bodyHidden').value = quill.root.innerHTML;
         }
 
+        // ─── Scheduling toggles ───
+        document.getElementById('clientTimezoneMinutes').value = new Date().getTimezoneOffset();
+
+        function setupToggle(checkboxName, optId, otherId, showGroup) {
+            const opt   = document.getElementById(optId);
+            const other = document.getElementById(otherId);
+            const cb    = opt?.querySelector('input[type="checkbox"]');
+            cb?.addEventListener('change', function () {
+                if (this.checked) {
+                    opt.classList.add('active');
+                    opt.querySelector('.check-icon').className = 'bi bi-check-circle-fill check-icon';
+                    const otherCb = other?.querySelector('input[type="checkbox"]');
+                    if (otherCb) { otherCb.checked = false; other.classList.remove('active'); other.querySelector('.check-icon').className = 'bi bi-circle check-icon'; }
+                } else {
+                    opt.classList.remove('active');
+                    opt.querySelector('.check-icon').className = 'bi bi-circle check-icon';
+                }
+                if (showGroup !== null) {
+                    document.getElementById('scheduledDateGroup').style.display = this.checked ? 'block' : 'none';
+                }
+            });
+        }
+        setupToggle('IsNow',   'optNow',   'optLater', null);
+        setupToggle('IsLater', 'optLater', 'optNow',   'scheduledDateGroup');
+
+        // ─── Form submit ───
+        document.getElementById('publicationForm')?.addEventListener('submit', syncBody);
+
         function saveAsDraft() {
-            // Create a hidden input for IsPublish = false
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'IsPublish';
-            hiddenInput.value = 'false';
-            document.getElementById('publicationForm')?.appendChild(hiddenInput);
-            
-            // Remove the existing IsPublish input if it exists
-            const existingInput = document.querySelector('input[name="IsPublish"][type="hidden"]');
-            if (existingInput && existingInput.value === 'true') {
-                existingInput.remove();
-            }
-            
-            // Синхронизируем Body перед отправкой
-            syncBodyField();
-            
+            syncBody();
+            document.getElementById('isPublishInput').value = 'false';
             document.getElementById('publicationForm')?.submit();
         }
 
-        // Функция синхронизации Body textarea со скрытым полем
-        function syncBodyField() {
-            const bodyTextarea = document.querySelector('textarea[name="Body"]');
-            const bodyHidden = document.getElementById('bodyHidden');
-            if (bodyTextarea && bodyHidden) {
-                bodyHidden.value = bodyTextarea.value || '';
-            }
-        }
+        // ─── File upload ───
+        const uploadedFileIds = [];
 
-        // Синхронизация Body перед отправкой формы
-        document.getElementById('publicationForm')?.addEventListener('submit', function(e) {
-            syncBodyField();
+        document.getElementById('mediaFiles')?.addEventListener('change', async function (e) {
+            await handleFiles(Array.from(e.target.files));
+            e.target.value = '';
         });
+
+        // Drag & drop
+        const dropZone = document.getElementById('mediaDropZone');
+        dropZone?.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+        dropZone?.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+        dropZone?.addEventListener('drop', async e => {
+            e.preventDefault(); dropZone.style.borderColor = '';
+            await handleFiles(Array.from(e.dataTransfer.files));
+        });
+
+        async function handleFiles(files) {
+            if (!files.length) return;
+            const bar = document.getElementById('uploadProgress');
+            const fill = bar?.querySelector('.progress-bar');
+            if (bar) bar.style.display = 'block';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (fill) fill.style.width = `${((i + 1) / files.length) * 100}%`;
+                const fd = new FormData();
+                fd.append('file', file);
+                try {
+                    const res = await fetch('/api/files/upload', { method: 'POST', body: fd });
+                    if (!res.ok) throw new Error('Ошибка загрузки');
+                    const data = await res.json();
+                    uploadedFileIds.push(data.id);
+                    document.getElementById('uploadedFileIds').value = uploadedFileIds.join(',');
+                    addFilePreview(data, file);
+                } catch (err) {
+                    alert(`Ошибка загрузки ${file.name}: ${err.message}`);
+                }
+            }
+            if (bar) bar.style.display = 'none';
+        }
+
+        function addFilePreview(fileData, originalFile) {
+            const container = document.getElementById('uploadedFilesPreview');
+            if (!container) return;
+            const col = document.createElement('div');
+            col.className = 'col-md-3 col-sm-4 col-6';
+            const isImg = fileData.type === 'Image';
+            const isVid = fileData.type === 'Video';
+            col.innerHTML = `
+                <div class="pf-file-preview position-relative" style="overflow:hidden;border-radius:10px;">
+                    ${isImg
+                        ? `<img src="/api/files/${fileData.id}/download" style="width:100%;height:90px;object-fit:cover;" alt="${originalFile.name}">`
+                        : `<div style="height:90px;background:var(--bg2);display:flex;align-items:center;justify-content:center;">
+                               <i class="bi ${isVid ? "bi-play-circle" : "bi-file-earmark"}" style="font-size:1.8rem;color:var(--muted);"></i>
+                           </div>`}
+                    <div style="padding:6px 8px;font-size:0.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${originalFile.name}">${originalFile.name}</div>
+                    <button type="button" class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-1 remove-file-btn"
+                            data-file-id="${fileData.id}" style="padding:2px 6px;font-size:0.7rem;line-height:1.4;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>`;
+            container.appendChild(col);
+            col.querySelector('.remove-file-btn')?.addEventListener('click', function () {
+                const id = this.getAttribute('data-file-id');
+                const idx = uploadedFileIds.indexOf(id);
+                if (idx > -1) { uploadedFileIds.splice(idx, 1); document.getElementById('uploadedFileIds').value = uploadedFileIds.join(','); }
+                col.remove();
+            });
+        }
     </script>
-    
-    <style>
-        .publication-editor-container {
-            min-height: calc(100vh - 0px);
-            background-color: #f8f9fa;
-        }
-
-        .publication-sidebar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: calc(100vh - 0px);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-content {
-            padding: 2rem;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-
-        .sidebar-header {
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .settings-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .section-header {
-            color: white;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .status-box {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 0.5rem;
-            padding: 0.75rem 1rem;
-            display: inline-flex;
-            align-items: center;
-            font-size: 0.9rem;
-        }
-
-        .toggle-options {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .toggle-option {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 0.5rem;
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            flex-grow: 1;
-        }
-
-        .toggle-option:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .toggle-option.active {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: white;
-        }
-
-        .toggle-option input[type="checkbox"] {
-            margin-left: 0.5rem;
-            accent-color: #667eea;
-        }
-
-        .channels-list {
-            max-height: 300px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
-        .channel-item {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: background 0.2s;
-        }
-
-        .channel-item:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .channel-item .form-check-input {
-            accent-color: #667eea;
-        }
-
-        /* Editor Styles */
-        .publication-editor {
-            background: white;
-            min-height: calc(100vh - 0px);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .editor-content {
-            padding: 2rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .editor-header {
-            border-bottom: 1px solid #e9ecef;
-            padding-bottom: 1rem;
-        }
-
-        .editor-main {
-            flex-grow: 1;
-            margin-top: 1rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .editor-main textarea {
-            min-height: 300px;
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-
-        .media-upload-section {
-            margin-top: 1.5rem;
-        }
-
-        .file-preview-card {
-            transition: transform 0.2s;
-        }
-        
-        .file-preview-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .remove-file-btn {
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Custom Scrollbar for channels-list */
-        .channels-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .channels-list::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .channels-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-        }
-
-        @@media (max-width: 992px) {
-            .publication-sidebar {
-                min-height: auto;
-            }
-            
-            .publication-editor {
-                min-height: auto;
-            }
-        }
-    </style>
 }

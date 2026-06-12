@@ -2,78 +2,41 @@
     ViewData["Title"] = "Главная";
 }
 
-<div class="text-center mb-5">
-    <h1 class="display-4 fw-bold mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-        Добро пожаловать в SMM Planner
-    </h1>
-    <p class="lead text-muted">Система планирования публикаций в социальных сетях</p>
+<div class="text-center mb-5 pf-animate">
+    <h1 class="pf-page-title" style="font-size:2.2rem;">Добро пожаловать в <span style="color:var(--accent)">Planify</span></h1>
+    <p style="color:var(--muted);font-size:0.95rem;margin-top:8px;">Система планирования публикаций в социальных сетях</p>
 </div>
 
-<div class="row g-4 mt-4">
-    <div class="col-md-4">
-        <div class="card home-card shadow-sm border-0 h-100">
-            <div class="card-body text-center p-4">
-                <div class="home-card-icon bg-primary mb-3">
-                    <i class="bi bi-folder text-white"></i>
-                </div>
-                <h5 class="card-title fw-bold mb-3">Проекты</h5>
-                <p class="card-text text-muted mb-4">Управляйте своими проектами и каналами</p>
-                <a asp-controller="Projects" asp-action="Index" class="btn btn-primary w-100">
-                    <i class="bi bi-arrow-right me-2"></i>Перейти к проектам
-                </a>
+<div class="row g-4 mt-2">
+    <div class="col-md-4 pf-animate pf-animate-delay-1">
+        <a asp-controller="Projects" asp-action="Index" class="pf-home-card">
+            <div class="pf-home-card-icon" style="background:rgba(255,77,109,0.14);color:var(--accent);">
+                <i class="bi bi-folder2"></i>
             </div>
-        </div>
+            <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin:0 0 6px;">Проекты</h5>
+            <p style="font-size:0.82rem;color:var(--muted);margin:0 0 16px;">Управляйте своими проектами и каналами</p>
+            <span class="btn btn-primary btn-sm w-100"><i class="bi bi-arrow-right me-1"></i>Перейти</span>
+        </a>
     </div>
-    <div class="col-md-4">
-        <div class="card home-card shadow-sm border-0 h-100">
-            <div class="card-body text-center p-4">
-                <div class="home-card-icon bg-success mb-3">
-                    <i class="bi bi-file-post text-white"></i>
-                </div>
-                <h5 class="card-title fw-bold mb-3">Публикации</h5>
-                <p class="card-text text-muted mb-4">Создавайте и планируйте публикации</p>
-                <a asp-controller="Publications" asp-action="Index" class="btn btn-success w-100">
-                    <i class="bi bi-arrow-right me-2"></i>Перейти к публикациям
-                </a>
+    <div class="col-md-4 pf-animate pf-animate-delay-2">
+        <a asp-controller="Publications" asp-action="Index" class="pf-home-card">
+            <div class="pf-home-card-icon" style="background:rgba(39,201,63,0.14);color:#27C93F;">
+                <i class="bi bi-file-post"></i>
             </div>
-        </div>
+            <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin:0 0 6px;">Публикации</h5>
+            <p style="font-size:0.82rem;color:var(--muted);margin:0 0 16px;">Создавайте и планируйте публикации</p>
+            <span class="btn btn-success btn-sm w-100"><i class="bi bi-arrow-right me-1"></i>Перейти</span>
+        </a>
     </div>
-    <div class="col-md-4">
-        <div class="card home-card shadow-sm border-0 h-100">
-            <div class="card-body text-center p-4">
-                <div class="home-card-icon bg-info mb-3">
-                    <i class="bi bi-calendar3 text-white"></i>
-                </div>
-                <h5 class="card-title fw-bold mb-3">Календарь</h5>
-                <p class="card-text text-muted mb-4">Просматривайте запланированные публикации</p>
-                <a asp-controller="Publications" asp-action="Calendar" class="btn btn-info w-100 text-white">
-                    <i class="bi bi-arrow-right me-2"></i>Открыть календарь
-                </a>
+    <div class="col-md-4 pf-animate pf-animate-delay-3">
+        <a asp-controller="Publications" asp-action="Calendar" class="pf-home-card">
+            <div class="pf-home-card-icon" style="background:rgba(59,130,246,0.14);color:#3b82f6;">
+                <i class="bi bi-calendar3"></i>
             </div>
-        </div>
+            <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin:0 0 6px;">Календарь</h5>
+            <p style="font-size:0.82rem;color:var(--muted);margin:0 0 16px;">Просматривайте запланированные публикации</p>
+            <span class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-arrow-right me-1"></i>Открыть</span>
+        </a>
     </div>
 </div>
-
-<style>
-    .home-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        border-radius: 1rem;
-    }
-    
-    .home-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-    }
-    
-    .home-card-icon {
-        width: 70px;
-        height: 70px;
-        border-radius: 1rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        margin: 0 auto;
-    }
-</style>
 

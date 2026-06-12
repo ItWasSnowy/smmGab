@@ -4,23 +4,19 @@
     var projects = ViewBag.Projects as List<SmmGab.Domain.Models.Project> ?? new List<SmmGab.Domain.Models.Project>();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="d-flex align-items-center gap-3">
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Назад
-        </a>
-        <h2 class="mb-0">Каналы</h2>
+<div class="pf-page-header pf-animate">
+    <div>
+        <h1 class="pf-page-title">Каналы</h1>
     </div>
-    <a asp-action="Create" class="btn btn-primary">Создать канал</a>
+    <a asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus me-1"></i>Создать канал
+    </a>
 </div>
 
 @if (projects.Any())
 {
-    <div class="mb-4">
-        <label class="form-label fw-semibold mb-2">
-            <i class="bi bi-funnel me-2"></i>Фильтр по проекту
-        </label>
-        <select id="projectFilter" class="form-select" style="max-width: 300px;">
+    <div class="mb-4 pf-animate">
+        <select id="projectFilter" class="form-select" style="max-width:280px;">
             <option value="">Все проекты</option>
             @foreach (var project in projects)
             {
@@ -32,59 +28,39 @@
 
 @if (Model.Any())
 {
-    <div class="row g-4">
+    <div class="row g-3 pf-animate pf-animate-delay-1">
         @foreach (var channel in Model)
         {
+            var isVk = channel.Type == SmmGab.Domain.Enums.ChannelType.Vk;
             <div class="col-md-6 col-lg-4">
-                <div class="card channel-card h-100 shadow-sm border-0">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start mb-3">
-                            <div class="channel-icon me-3">
-                                @if (channel.Type == SmmGab.Domain.Enums.ChannelType.Vk)
-                                {
-                                    <div class="channel-icon-bg bg-primary">
-                                        <i class="bi bi-chat-dots-fill text-white"></i>
-                                    </div>
-                                }
-                                else if (channel.Type == SmmGab.Domain.Enums.ChannelType.Telegram)
-                                {
-                                    <div class="channel-icon-bg bg-info">
-                                        <i class="bi bi-telegram text-white"></i>
-                                    </div>
-                                }
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="card-title mb-1 fw-bold">@channel.DisplayName</h5>
-                                <span class="badge bg-@(channel.Type == SmmGab.Domain.Enums.ChannelType.Vk ? "primary" : "info") mb-2">
-                                    @channel.Type
-                                </span>
-                            </div>
+                <div class="pf-item-card d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="pf-icon-badge"
+                             style="background:@(isVk ? "rgba(0,119,255,0.14)" : "rgba(0,136,204,0.14)");color:@(isVk ? "#0077ff" : "#0088cc");">
+                            <i class="bi @(isVk ? "bi-chat-dots-fill" : "bi-telegram")"></i>
                         </div>
-                        
-                        <div class="channel-info mb-3">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-folder text-muted me-2"></i>
-                                <small class="text-muted">@channel.Project.Name</small>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-hash text-muted me-2"></i>
-                                <code class="small text-muted">@channel.ExternalId</code>
-                            </div>
+                        <div class="flex-grow-1">
+                            <div style="font-weight:700;font-size:0.875rem;">@channel.DisplayName</div>
+                            <span class="badge @(isVk ? "status-scheduled" : "status-publishing")" style="font-size:0.68rem;">@channel.Type</span>
                         </div>
-                        
-                        <div class="d-flex gap-2 flex-wrap">
-                            <a asp-action="Details" asp-route-id="@channel.Id" class="btn btn-sm btn-outline-primary flex-fill">
-                                <i class="bi bi-eye me-1"></i>Подробнее
-                            </a>
-                            <a asp-action="Edit" asp-route-id="@channel.Id" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form asp-action="Delete" asp-route-id="@channel.Id" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот канал?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </div>
+                    </div>
+                    <div style="border-top:1px solid var(--glass-border);padding-top:10px;font-size:0.78rem;color:var(--muted);">
+                        <div class="mb-1"><i class="bi bi-folder me-1"></i>@channel.Project.Name</div>
+                        <div><i class="bi bi-hash me-1"></i><code style="font-size:0.72rem;color:var(--muted);">@channel.ExternalId</code></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a asp-action="Details" asp-route-id="@channel.Id" class="btn btn-sm btn-outline-primary flex-fill">
+                            <i class="bi bi-eye me-1"></i>Детали
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@channel.Id" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form asp-action="Delete" asp-route-id="@channel.Id" method="post"
+                              onsubmit="return confirm('Удалить канал?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -93,12 +69,12 @@
 }
 else
 {
-    <div class="card shadow-sm border-0">
+    <div class="card pf-animate">
         <div class="card-body text-center py-5">
-            <i class="bi bi-broadcast display-1 text-muted mb-3"></i>
-            <h5 class="text-muted mb-3">У вас пока нет каналов</h5>
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-2"></i>Создайте первый канал
+            <i class="bi bi-broadcast" style="font-size:3rem;color:var(--muted);opacity:0.35;"></i>
+            <p class="text-muted mt-3 mb-3" style="font-size:0.875rem;">У вас пока нет каналов</p>
+            <a asp-action="Create" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus me-1"></i>Создайте первый канал
             </a>
         </div>
     </div>
@@ -106,40 +82,12 @@ else
 
 @section Scripts {
     <script>
-        document.getElementById('projectFilter')?.addEventListener('change', function() {
-            var projectId = this.value;
-            if (projectId) {
-                window.location.href = '@Url.Action("Index")?projectId=' + projectId;
-            } else {
-                window.location.href = '@Url.Action("Index")';
-            }
+        document.getElementById('projectFilter')?.addEventListener('change', function () {
+            var pid = this.value;
+            window.location.href = pid
+                ? '@Url.Action("Index")?projectId=' + pid
+                : '@Url.Action("Index")';
         });
     </script>
-    <style>
-        .channel-card {
-            transition: transform 0.2s, box-shadow 0.2s;
-            border-radius: 1rem;
-        }
-        
-        .channel-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-        }
-        
-        .channel-icon-bg {
-            width: 50px;
-            height: 50px;
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-        
-        .channel-info {
-            border-top: 1px solid #e9ecef;
-            padding-top: 1rem;
-        }
-    </style>
 }
 

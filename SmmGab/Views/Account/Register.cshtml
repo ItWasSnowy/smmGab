@@ -1,65 +1,50 @@
 @model SmmGab.Models.RegisterViewModel
 @{
     ViewData["Title"] = "Регистрация";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-5">
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <a asp-controller="Home" asp-action="Index" class="auth-logo">Plani<span>fy</span></a>
         <div class="text-center mb-4">
-            <h1 class="display-5 fw-bold mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                Регистрация
-            </h1>
-            <p class="text-muted">Создайте новый аккаунт</p>
+            <h2 class="auth-title">Создать аккаунт</h2>
+            <p class="auth-sub text-muted mb-0">Начните работу бесплатно</p>
         </div>
-        <div class="card shadow-lg border-0">
-            <div class="card-body p-4">
-                <form asp-controller="Account" asp-action="Register" method="post">
-                    <div asp-validation-summary="All" class="alert alert-danger"></div>
-                    <div class="form-group mb-3">
-                        <label asp-for="Name" class="form-label fw-semibold">
-                            <i class="bi bi-person me-2"></i>Имя
-                        </label>
-                        <input asp-for="Name" class="form-control" placeholder="Введите ваше имя" />
-                        <span asp-validation-for="Name" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label asp-for="Email" class="form-label fw-semibold">
-                            <i class="bi bi-envelope me-2"></i>Email
-                        </label>
-                        <input asp-for="Email" class="form-control" placeholder="Введите email" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label asp-for="Password" class="form-label fw-semibold">
-                            <i class="bi bi-lock me-2"></i>Пароль
-                        </label>
-                        <input asp-for="Password" class="form-control" placeholder="Введите пароль" />
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label asp-for="ConfirmPassword" class="form-label fw-semibold">
-                            <i class="bi bi-lock-fill me-2"></i>Подтвердите пароль
-                        </label>
-                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Повторите пароль" />
-                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary w-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                            <i class="bi bi-person-plus me-2"></i>Зарегистрироваться
-                        </button>
-                    </div>
-                    <div class="form-group mt-3 text-center">
-                        <p class="mb-0">
-                            Уже есть аккаунт? <a asp-controller="Account" asp-action="Login" class="text-decoration-none fw-semibold">Войти</a>
-                        </p>
-                    </div>
-                </form>
+
+        <form asp-controller="Account" asp-action="Register" method="post">
+            <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"><i class="bi bi-person me-1"></i>Имя</label>
+                <input asp-for="Name" class="form-control" placeholder="Ваше имя" />
+                <span asp-validation-for="Name" class="text-danger" style="font-size:0.78rem;"></span>
             </div>
-        </div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"><i class="bi bi-envelope me-1"></i>Email</label>
+                <input asp-for="Email" class="form-control" placeholder="you@example.com" />
+                <span asp-validation-for="Email" class="text-danger" style="font-size:0.78rem;"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"><i class="bi bi-lock me-1"></i>Пароль</label>
+                <input asp-for="Password" class="form-control" placeholder="••••••••" />
+                <span asp-validation-for="Password" class="text-danger" style="font-size:0.78rem;"></span>
+            </div>
+            <div class="mb-4">
+                <label asp-for="ConfirmPassword" class="form-label"><i class="bi bi-lock-fill me-1"></i>Подтвердите пароль</label>
+                <input asp-for="ConfirmPassword" class="form-control" placeholder="••••••••" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger" style="font-size:0.78rem;"></span>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mb-3" style="padding:12px;">
+                <i class="bi bi-person-plus me-2"></i>Зарегистрироваться
+            </button>
+            <p class="text-center mb-0" style="font-size:0.875rem;color:var(--muted);">
+                Уже есть аккаунт?
+                <a asp-controller="Account" asp-action="Login" style="color:var(--accent);font-weight:600;text-decoration:none;">Войти</a>
+            </p>
+        </form>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
-

@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planify — СММ Планнер нового поколения</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --bg2: #111116;
+    --bg3: #16161d;
+    --accent: #FF4D6D;
+    --accent2: #FF8FA3;
+    --gold: #C9A84C;
+    --gold2: #E8C96A;
+    --text: #F0EDE8;
+    --muted: #8A8796;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+    --glow: rgba(255,77,109,0.25);
+    --nav-bg: rgba(10,10,12,0.95);
+    --shadow-card: 0 30px 80px rgba(0,0,0,0.5);
+    --shadow-mock: 0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+    --steps-bg: #111116;
+    --steps-word-color: rgba(255,255,255,0.015);
+  }
+
+  html.light {
+    --bg: #F7F5F2;
+    --bg2: #EEEAE4;
+    --bg3: #E6E1D9;
+    --text: #1A1714;
+    --muted: #7A7570;
+    --glass: rgba(0,0,0,0.04);
+    --glass-border: rgba(0,0,0,0.1);
+    --glow: rgba(255,77,109,0.2);
+    --nav-bg: rgba(247,245,242,0.95);
+    --shadow-card: 0 30px 80px rgba(0,0,0,0.12);
+    --shadow-mock: 0 40px 120px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06);
+    --steps-bg: #EEEAE4;
+    --steps-word-color: rgba(0,0,0,0.04);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+    transition: background 0.45s ease, color 0.45s ease;
+  }
+
+  /* Theme transition for all elements */
+  *, *::before, *::after {
+    transition: background-color 0.45s ease, border-color 0.45s ease, color 0.45s ease, box-shadow 0.45s ease;
+  }
+  /* But keep animation-based transitions intact */
+  .cursor, .cursor-ring { transition: left 0s, top 0s, width 0.3s, height 0.3s, background 0.3s, border-color 0.3s; }
+
+  /* Custom cursor */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s, background 0.3s;
+    mix-blend-mode: multiply;
+  }
+  html:not(.light) .cursor { mix-blend-mode: screen; }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1.5px solid rgba(255,77,109,0.5);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease, width 0.3s, height 0.3s;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 1000; opacity: 0.5;
+    transition: opacity 0.4s;
+  }
+  html.light body::before { opacity: 0.25; }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 500;
+    padding: 24px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, var(--nav-bg), transparent);
+    backdrop-filter: blur(0px);
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .logo span { color: var(--accent); }
+  .nav-links {
+    display: flex; gap: 36px; list-style: none;
+  }
+  .nav-links a {
+    text-decoration: none; color: var(--muted);
+    font-size: 0.88rem; font-weight: 500; letter-spacing: 0.02em;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--accent);
+    color: #fff;
+    border: none; padding: 12px 28px;
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 600;
+    cursor: none;
+    transition: transform 0.3s, box-shadow 0.3s;
+    letter-spacing: 0.02em;
+  }
+  .nav-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px var(--glow);
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 0 60px;
+    padding-top: 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Background orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    opacity: 0;
+    animation: orbAppear 2s forwards;
+  }
+  .orb-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,77,109,0.18) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    animation-delay: 0.5s;
+  }
+  html.light .orb-1 { background: radial-gradient(circle, rgba(255,77,109,0.10) 0%, transparent 70%); }
+  .orb-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+    bottom: 100px; left: 100px;
+    animation-delay: 1s;
+  }
+  html.light .orb-2 { background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%); }
+  .orb-3 {
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(100,80,220,0.1) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    animation-delay: 1.5s;
+  }
+  @keyframes orbAppear {
+    to { opacity: 1; }
+  }
+
+  .hero-text { position: relative; z-index: 2; }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    padding: 8px 18px; border-radius: 100px;
+    font-size: 0.78rem; font-weight: 500;
+    color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 28px;
+    opacity: 0; animation: slideUp 0.8s 0.3s forwards;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3.2rem, 5vw, 5.5rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    opacity: 0; animation: slideUp 0.9s 0.5s forwards;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--accent);
+    position: relative;
+  }
+  .hero-title em::after {
+    content: '';
+    position: absolute;
+    bottom: 4px; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    border-radius: 2px;
+  }
+
+  .hero-sub {
+    font-size: 1.05rem; color: var(--muted);
+    line-height: 1.7; max-width: 480px;
+    margin-bottom: 44px;
+    font-weight: 300;
+    opacity: 0; animation: slideUp 0.9s 0.7s forwards;
+  }
+
+  .hero-actions {
+    display: flex; gap: 16px; align-items: center;
+    opacity: 0; animation: slideUp 0.9s 0.9s forwards;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff; border: none;
+    padding: 16px 36px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; font-weight: 600;
+    cursor: none; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 48px var(--glow);
+  }
+  .btn-primary svg { transition: transform 0.3s; }
+  .btn-primary:hover svg { transform: translateX(4px); }
+
+  .btn-ghost {
+    color: var(--text); text-decoration: none;
+    font-size: 0.9rem; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 8px;
+    opacity: 0.7; transition: opacity 0.3s;
+  }
+  .btn-ghost:hover { opacity: 1; }
+
+  .hero-stats {
+    display: flex; gap: 40px; margin-top: 56px;
+    opacity: 0; animation: slideUp 0.9s 1.1s forwards;
+  }
+  .stat { }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem; font-weight: 700;
+    color: var(--text); line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-num span { color: var(--accent); }
+  .stat-label { font-size: 0.8rem; color: var(--muted); font-weight: 400; }
+
+  /* Hero visual */
+  .hero-visual {
+    position: relative; z-index: 2;
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; animation: fadeIn 1.2s 0.8s forwards;
+  }
+
+  .dashboard-mock {
+    width: 100%;
+    max-width: 560px;
+    background: var(--bg3);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow-mock);
+    transform: perspective(800px) rotateY(-8deg) rotateX(3deg);
+    transition: transform 0.5s;
+  }
+  .dashboard-mock:hover {
+    transform: perspective(800px) rotateY(-3deg) rotateX(1deg);
+  }
+
+  .mock-topbar {
+    background: var(--bg2);
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .mock-dots { display: flex; gap: 6px; }
+  .mock-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .mock-dot:nth-child(1) { background: #FF5F56; }
+  .mock-dot:nth-child(2) { background: #FFBD2E; }
+  .mock-dot:nth-child(3) { background: #27C93F; }
+
+  .mock-title {
+    font-size: 0.78rem; color: var(--muted);
+    margin-left: 8px; font-weight: 400;
+  }
+
+  .mock-content { padding: 20px; }
+
+  .calendar-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+  }
+  .cal-month {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-weight: 700;
+  }
+  .cal-nav { display: flex; gap: 6px; }
+  .cal-btn {
+    width: 28px; height: 28px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 8px; color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; cursor: none;
+  }
+
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; margin-bottom: 16px;
+  }
+  .cal-day-head {
+    font-size: 0.65rem; color: var(--muted);
+    text-align: center; padding: 4px 0;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .cal-day.empty { opacity: 0; }
+  .cal-day.has-post {
+    background: rgba(255,77,109,0.12);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .cal-day.has-post::after {
+    content: '';
+    position: absolute; bottom: 4px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent);
+  }
+  .cal-day.today {
+    background: var(--accent);
+    color: #fff; font-weight: 700;
+  }
+  .cal-day.has-gold {
+    background: rgba(201,168,76,0.15);
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .cal-day.has-gold::after {
+    content: '';
+    position: absolute; bottom: 4px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--gold);
+  }
+
+  .upcoming-posts { }
+  .up-title {
+    font-size: 0.72rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .post-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 12px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    margin-bottom: 8px;
+    animation: postSlide 0.5s ease both;
+  }
+  @keyframes postSlide {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .post-item:nth-child(2) { animation-delay: 0.1s; }
+  .post-item:nth-child(3) { animation-delay: 0.2s; }
+
+  .post-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; flex-shrink: 0;
+  }
+  .post-icon.ig { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); }
+  .post-icon.vk { background: #0077ff; }
+  .post-icon.tg { background: #0088cc; }
+
+  .post-info { flex: 1; min-width: 0; }
+  .post-name {
+    font-size: 0.78rem; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .post-time { font-size: 0.68rem; color: var(--muted); }
+
+  .post-status {
+    font-size: 0.65rem; padding: 3px 8px; border-radius: 100px;
+    font-weight: 600; letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+  .post-status.scheduled {
+    background: rgba(255,77,109,0.15);
+    color: var(--accent);
+  }
+  .post-status.draft {
+    background: rgba(201,168,76,0.15);
+    color: var(--gold);
+  }
+  .post-status.published {
+    background: rgba(39,201,63,0.15);
+    color: #27C93F;
+  }
+
+  /* Floating notifications */
+  .notif {
+    position: absolute;
+    background: var(--bg2);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    backdrop-filter: blur(20px);
+    z-index: 10;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  .notif-1 {
+    top: -20px; right: -60px;
+    animation: float1 4s ease-in-out infinite;
+    opacity: 0; animation: notifIn 0.6s 1.8s forwards, float1 4s 2.4s ease-in-out infinite;
+  }
+  .notif-2 {
+    bottom: 40px; left: -70px;
+    opacity: 0; animation: notifIn 0.6s 2.2s forwards, float2 5s 2.8s ease-in-out infinite;
+  }
+  @keyframes notifIn {
+    from { opacity: 0; transform: scale(0.8) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes float1 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(8px); }
+  }
+  .notif-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+  }
+  .notif-text strong { display: block; font-weight: 600; color: var(--text); margin-bottom: 1px; }
+  .notif-text span { color: var(--muted); font-size: 0.72rem; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ─── MARQUEE ─── */
+  .marquee-section {
+    padding: 30px 0;
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+    overflow: hidden;
+    background: var(--bg2);
+  }
+  .marquee-track {
+    display: flex; gap: 0;
+    animation: marqueeScroll 25s linear infinite;
+    width: max-content;
+  }
+  .marquee-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 40px;
+    color: var(--muted); font-size: 0.85rem; font-weight: 500;
+    letter-spacing: 0.02em; white-space: nowrap;
+  }
+  .marquee-item::before {
+    content: '✦';
+    color: var(--accent); font-size: 0.7rem;
+  }
+  @keyframes marqueeScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* ─── FEATURES ─── */
+  .section {
+    padding: 120px 60px;
+    position: relative;
+  }
+
+  .section-label {
+    display: inline-flex; align-items: center; gap: 10px;
+    color: var(--accent); font-size: 0.78rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .section-label::before {
+    content: ''; width: 24px; height: 1px; background: var(--accent);
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 4vw, 4rem);
+    font-weight: 900; line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+  .section-title em {
+    font-style: italic; color: var(--accent);
+  }
+
+  .section-sub {
+    font-size: 1rem; color: var(--muted);
+    line-height: 1.7; max-width: 500px;
+    font-weight: 300;
+  }
+
+  .features-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    margin-top: 80px;
+  }
+
+  .features-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .feature-item {
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    cursor: none;
+    transition: all 0.3s;
+    display: flex; gap: 18px; align-items: flex-start;
+  }
+  .feature-item:hover, .feature-item.active {
+    background: var(--glass);
+    border-color: var(--glass-border);
+  }
+  .feature-item.active { border-color: rgba(255,77,109,0.3); }
+
+  .feature-icon-wrap {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; flex-shrink: 0;
+    background: var(--glass); border: 1px solid var(--glass-border);
+  }
+  .feature-item.active .feature-icon-wrap {
+    background: rgba(255,77,109,0.12);
+    border-color: rgba(255,77,109,0.3);
+  }
+
+  .feature-body { }
+  .feature-name {
+    font-weight: 600; font-size: 0.95rem;
+    margin-bottom: 6px; color: var(--text);
+  }
+  .feature-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+  .features-visual {
+    position: relative;
+  }
+  .visual-card {
+    background: var(--bg3);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: var(--shadow-card);
+  }
+  .analytics-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .analytics-card {
+    background: var(--bg2);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px; padding: 16px;
+  }
+  .analytics-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 8px; font-weight: 400; }
+  .analytics-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem; font-weight: 700;
+    line-height: 1; margin-bottom: 6px;
+  }
+  .analytics-value.pos { color: #27C93F; }
+  .analytics-value.accent { color: var(--accent); }
+  .analytics-value.gold { color: var(--gold); }
+  .analytics-change {
+    font-size: 0.72rem; display: flex; align-items: center; gap: 4px;
+  }
+  .analytics-change.up { color: #27C93F; }
+  .analytics-change.down { color: var(--accent); }
+
+  .chart-area {
+    background: var(--bg2);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px; padding: 16px 20px;
+  }
+  .chart-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .chart-title { font-size: 0.8rem; font-weight: 600; }
+  .chart-period {
+    font-size: 0.68rem; color: var(--muted);
+    background: var(--glass); border: 1px solid var(--glass-border);
+    padding: 4px 10px; border-radius: 100px;
+  }
+
+  .chart-svg { width: 100%; }
+
+  /* ─── HOW IT WORKS ─── */
+  .steps-section {
+    background: var(--steps-bg);
+    padding: 120px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .steps-section::before {
+    content: 'PLAN';
+    position: absolute;
+    font-family: 'Playfair Display', serif;
+    font-size: 20rem; font-weight: 900;
+    color: var(--steps-word-color);
+    right: -60px; top: 50%;
+    transform: translateY(-50%);
+    letter-spacing: -0.05em;
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .steps-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 2px; margin-top: 80px;
+    position: relative; z-index: 2;
+  }
+  .step-item {
+    padding: 40px 36px;
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    position: relative;
+    transition: all 0.4s;
+    overflow: hidden;
+  }
+  .step-item::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,77,109,0.06) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.4s;
+  }
+  .step-item:hover::before { opacity: 1; }
+  .step-item:hover { border-color: rgba(255,77,109,0.3); transform: translateY(-4px); }
+
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem; font-weight: 900;
+    color: rgba(255,77,109,0.15); line-height: 1;
+    margin-bottom: 20px;
+  }
+  .step-icon { font-size: 1.8rem; margin-bottom: 16px; }
+  .step-name {
+    font-size: 1.1rem; font-weight: 600;
+    margin-bottom: 10px; letter-spacing: -0.01em;
+  }
+  .step-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.7; }
+
+  /* ─── INTEGRATIONS ─── */
+  .integrations-section { padding: 100px 60px; text-align: center; }
+  .integrations-grid {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    justify-content: center; margin-top: 60px;
+  }
+  .integ-item {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 16px 24px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.88rem; font-weight: 500;
+    transition: all 0.3s; cursor: none;
+  }
+  .integ-item:hover {
+    border-color: rgba(255,77,109,0.4);
+    background: rgba(255,77,109,0.06);
+    transform: translateY(-3px);
+  }
+  .integ-icon { font-size: 1.3rem; }
+
+  /* ─── PRICING ─── */
+  .pricing-section { padding: 120px 60px; background: var(--bg2); }
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; margin-top: 80px; max-width: 1000px;
+    margin-left: auto; margin-right: auto;
+  }
+  .pricing-card {
+    background: var(--bg3);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px; padding: 36px;
+    position: relative; transition: all 0.4s;
+  }
+  .pricing-card.popular {
+    border-color: var(--accent);
+    background: linear-gradient(160deg, rgba(255,77,109,0.08) 0%, var(--bg3) 60%);
+  }
+  .popular-badge {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #fff;
+    font-size: 0.72rem; font-weight: 700;
+    padding: 5px 18px; border-radius: 100px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .pricing-tier { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .pricing-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem; font-weight: 900;
+    line-height: 1; margin-bottom: 4px;
+  }
+  .pricing-price span { font-size: 1.2rem; font-weight: 400; vertical-align: top; margin-top: 10px; display: inline-block; }
+  .pricing-period { font-size: 0.82rem; color: var(--muted); margin-bottom: 28px; }
+  .pricing-divider { height: 1px; background: var(--glass-border); margin-bottom: 24px; }
+  .pricing-features { list-style: none; margin-bottom: 32px; }
+  .pricing-features li {
+    font-size: 0.85rem; color: var(--muted);
+    padding: 8px 0; display: flex; gap: 10px; align-items: center;
+  }
+  .pricing-features li::before {
+    content: '✓'; color: var(--accent); font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
+  }
+  .pricing-features li.no { color: rgba(138,135,150,0.4); }
+  .pricing-features li.no::before { content: '×'; color: rgba(138,135,150,0.3); }
+  .btn-pricing {
+    width: 100%; padding: 14px;
+    border-radius: 12px; border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; font-weight: 600;
+    cursor: none; transition: all 0.3s; letter-spacing: 0.02em;
+  }
+  .btn-pricing.outline {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+  }
+  .btn-pricing.outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-pricing.solid { background: var(--accent); color: #fff; }
+  .btn-pricing.solid:hover { box-shadow: 0 8px 32px var(--glow); transform: translateY(-2px); }
+
+  /* ─── TESTIMONIALS ─── */
+  .testi-section { padding: 120px 60px; }
+  .testi-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; margin-top: 80px;
+  }
+  .testi-card {
+    background: var(--bg3);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px; padding: 30px;
+    transition: all 0.3s;
+  }
+  .testi-card:hover {
+    border-color: rgba(255,77,109,0.3);
+    transform: translateY(-4px);
+  }
+  .testi-stars { color: var(--gold); font-size: 0.9rem; margin-bottom: 16px; letter-spacing: 2px; }
+  .testi-text { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 24px; font-style: italic; }
+  .testi-author { display: flex; align-items: center; gap: 12px; }
+  .testi-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .testi-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }
+  .testi-role { font-size: 0.75rem; color: var(--muted); }
+
+  /* ─── CTA ─── */
+  .cta-section {
+    padding: 120px 60px;
+    text-align: center;
+    position: relative; overflow: hidden;
+    background: var(--bg2);
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(255,77,109,0.12) 0%, transparent 65%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .cta-section .section-title { margin: 0 auto 20px; max-width: 700px; }
+  .cta-section .section-sub { margin: 0 auto 44px; text-align: center; }
+  .cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 60px 60px 40px;
+    border-top: 1px solid var(--glass-border);
+  }
+  .footer-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 48px; gap: 40px;
+  }
+  .footer-brand .logo { display: block; margin-bottom: 12px; }
+  .footer-tagline { font-size: 0.85rem; color: var(--muted); max-width: 240px; line-height: 1.6; }
+  .footer-links {
+    display: flex; gap: 60px;
+  }
+  .footer-col h4 {
+    font-size: 0.78rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text); margin-bottom: 16px;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 10px; }
+  .footer-col a {
+    text-decoration: none; color: var(--muted);
+    font-size: 0.85rem; transition: color 0.3s;
+  }
+  .footer-col a:hover { color: var(--text); }
+  .footer-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 24px; border-top: 1px solid var(--glass-border);
+  }
+  .footer-copy { font-size: 0.8rem; color: rgba(138,135,150,0.5); }
+  .footer-socials { display: flex; gap: 12px; }
+  .social-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; text-decoration: none;
+    transition: all 0.3s; cursor: none;
+  }
+  .social-btn:hover { border-color: rgba(255,77,109,0.4); background: rgba(255,77,109,0.08); }
+
+  /* Scroll animations */
+  .reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.7s, transform 0.7s;
+  }
+  .reveal.visible {
+    opacity: 1; transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: rgba(255,77,109,0.3); border-radius: 3px; }
+
+  /* ─── THEME TOGGLE ─── */
+  .theme-toggle {
+    background: none; border: none; cursor: none;
+    padding: 0; margin-left: 12px; flex-shrink: 0;
+    display: flex; align-items: center;
+  }
+  .toggle-track {
+    width: 56px; height: 28px;
+    background: var(--glass);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 100px;
+    position: relative;
+    display: flex; align-items: center;
+    transition: background 0.4s, border-color 0.4s;
+    overflow: hidden;
+  }
+  .toggle-icons {
+    position: absolute; inset: 0;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 0 7px;
+    font-size: 0.72rem; line-height: 1;
+    pointer-events: none;
+  }
+  .icon-sun { opacity: 0.4; transition: opacity 0.4s; }
+  .icon-moon { opacity: 0.9; transition: opacity 0.4s; }
+  html.light .icon-sun { opacity: 0.9; }
+  html.light .icon-moon { opacity: 0.3; }
+
+  .toggle-thumb {
+    position: absolute;
+    left: 3px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 2px 8px var(--glow);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s;
+    pointer-events: none;
+  }
+  html.light .toggle-thumb {
+    transform: translateX(28px);
+  }
+  .theme-toggle:hover .toggle-track {
+    border-color: rgba(255,77,109,0.4);
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 120px 24px 60px; }
+    .hero-visual { display: none; }
+    .section, .steps-section, .pricing-section, .testi-section, .cta-section { padding: 80px 24px; }
+    .features-layout, .steps-grid, .pricing-grid, .testi-grid { grid-template-columns: 1fr; }
+    .footer-top { flex-direction: column; }
+    .footer-links { flex-wrap: wrap; gap: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">Plani<span>fy</span></a>
+  <ul class="nav-links">
+    <li><a href="#features">Возможности</a></li>
+    <li><a href="#how">Как работает</a></li>
+    <li><a href="#pricing">Цены</a></li>
+    <li><a href="#reviews">Отзывы</a></li>
+  </ul>
+  <button class="nav-cta">Начать бесплатно</button>
+
+  <!-- Theme toggle -->
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+    <span class="toggle-track">
+      <span class="toggle-icons">
+        <span class="icon-moon">🌙</span>
+        <span class="icon-sun">☀️</span>
+      </span>
+      <span class="toggle-thumb"></span>
+    </span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-text">
+    <div class="hero-eyebrow">СММ Планнер нового поколения</div>
+    <h1 class="hero-title">
+      Управляй<br>
+      соцсетями<br>
+      <em>умнее</em>
+    </h1>
+    <p class="hero-sub">
+      Планируй публикации, анализируй аудиторию и автоматизируй контент сразу во всех социальных сетях — в одном рабочем пространстве.
+    </p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary">
+        Попробовать бесплатно
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="#" class="btn-ghost">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M6 5.5l5 2.5-5 2.5V5.5z" fill="currentColor"/>
+        </svg>
+        Смотреть демо
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">12<span>K+</span></div>
+        <div class="stat-label">Активных команд</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">94<span>%</span></div>
+        <div class="stat-label">Довольны сервисом</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">4<span>×</span></div>
+        <div class="stat-label">Быстрее публикации</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <!-- Floating notifications -->
+    <div class="notif notif-1">
+      <div class="notif-icon" style="background:linear-gradient(135deg,#833ab4,#fd1d1d)">📸</div>
+      <div class="notif-text">
+        <strong>Пост опубликован</strong>
+        <span>Instagram · только что</span>
+      </div>
+    </div>
+    <div class="notif notif-2">
+      <div class="notif-icon" style="background:#0088cc">✈️</div>
+      <div class="notif-text">
+        <strong>+2 340 охватов</strong>
+        <span>Telegram · за 2 часа</span>
+      </div>
+    </div>
+
+    <div class="dashboard-mock">
+      <div class="mock-topbar">
+        <div class="mock-dots">
+          <div class="mock-dot"></div>
+          <div class="mock-dot"></div>
+          <div class="mock-dot"></div>
+        </div>
+        <span class="mock-title">Планировщик — Май 2025</span>
+      </div>
+      <div class="mock-content">
+        <div class="calendar-header">
+          <span class="cal-month">Май 2025</span>
+          <div class="cal-nav">
+            <div class="cal-btn">‹</div>
+            <div class="cal-btn">›</div>
+          </div>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-day-head">Пн</div>
+          <div class="cal-day-head">Вт</div>
+          <div class="cal-day-head">Ср</div>
+          <div class="cal-day-head">Чт</div>
+          <div class="cal-day-head">Пт</div>
+          <div class="cal-day-head">Сб</div>
+          <div class="cal-day-head">Вс</div>
+          <div class="cal-day empty"></div>
+          <div class="cal-day empty"></div>
+          <div class="cal-day">1</div>
+          <div class="cal-day has-post">2</div>
+          <div class="cal-day has-post">3</div>
+          <div class="cal-day">4</div>
+          <div class="cal-day">5</div>
+          <div class="cal-day has-gold">6</div>
+          <div class="cal-day">7</div>
+          <div class="cal-day has-post">8</div>
+          <div class="cal-day">9</div>
+          <div class="cal-day has-gold">10</div>
+          <div class="cal-day has-post">11</div>
+          <div class="cal-day">12</div>
+          <div class="cal-day has-post">13</div>
+          <div class="cal-day">14</div>
+          <div class="cal-day today">15</div>
+          <div class="cal-day has-post">16</div>
+          <div class="cal-day">17</div>
+          <div class="cal-day has-gold">18</div>
+          <div class="cal-day has-post">19</div>
+          <div class="cal-day">20</div>
+          <div class="cal-day has-post">21</div>
+          <div class="cal-day">22</div>
+          <div class="cal-day has-post">23</div>
+          <div class="cal-day">24</div>
+        </div>
+
+        <div class="up-title">Ближайшие публикации</div>
+        <div class="post-item">
+          <div class="post-icon ig">📸</div>
+          <div class="post-info">
+            <div class="post-name">Новый продукт — анонс</div>
+            <div class="post-time">Сегодня, 14:00 · Instagram</div>
+          </div>
+          <span class="post-status scheduled">Запланировано</span>
+        </div>
+        <div class="post-item">
+          <div class="post-icon tg">✈️</div>
+          <div class="post-info">
+            <div class="post-name">Еженедельный дайджест</div>
+            <div class="post-time">Завтра, 10:00 · Telegram</div>
+          </div>
+          <span class="post-status draft">Черновик</span>
+        </div>
+        <div class="post-item">
+          <div class="post-icon vk">💬</div>
+          <div class="post-info">
+            <div class="post-name">Конкурс для подписчиков</div>
+            <div class="post-time">16 мая, 12:00 · ВКонтакте</div>
+          </div>
+          <span class="post-status published">Опубликовано</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track">
+    <div class="marquee-item">Instagram</div>
+    <div class="marquee-item">ВКонтакте</div>
+    <div class="marquee-item">Telegram</div>
+    <div class="marquee-item">TikTok</div>
+    <div class="marquee-item">YouTube</div>
+    <div class="marquee-item">Pinterest</div>
+    <div class="marquee-item">Facebook</div>
+    <div class="marquee-item">Twitter / X</div>
+    <div class="marquee-item">LinkedIn</div>
+    <div class="marquee-item">Одноклассники</div>
+    <div class="marquee-item">Instagram</div>
+    <div class="marquee-item">ВКонтакте</div>
+    <div class="marquee-item">Telegram</div>
+    <div class="marquee-item">TikTok</div>
+    <div class="marquee-item">YouTube</div>
+    <div class="marquee-item">Pinterest</div>
+    <div class="marquee-item">Facebook</div>
+    <div class="marquee-item">Twitter / X</div>
+    <div class="marquee-item">LinkedIn</div>
+    <div class="marquee-item">Одноклассники</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <div class="section-label">Возможности</div>
+    <h2 class="section-title reveal">Всё для <em>мощного</em><br>контент-маркетинга</h2>
+    <p class="section-sub reveal reveal-delay-1">Забудьте о десятках вкладок и ручной постановке таймеров. Planify собирает всё в одном месте.</p>
+
+    <div class="features-layout">
+      <div class="features-list reveal">
+        <div class="feature-item active">
+          <div class="feature-icon-wrap">📅</div>
+          <div class="feature-body">
+            <div class="feature-name">Визуальный контент-план</div>
+            <div class="feature-desc">Drag-and-drop календарь с цветовой кодировкой по платформам и типам контента.</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon-wrap">🤖</div>
+          <div class="feature-body">
+            <div class="feature-name">ИИ-генерация текстов</div>
+            <div class="feature-desc">Создавайте посты, подписи и хэштеги за секунды с помощью встроенного ИИ-помощника.</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon-wrap">📊</div>
+          <div class="feature-body">
+            <div class="feature-name">Глубокая аналитика</div>
+            <div class="feature-desc">Отслеживайте охваты, вовлечённость, рост аудитории и ROI в едином дашборде.</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon-wrap">👥</div>
+          <div class="feature-body">
+            <div class="feature-name">Командная работа</div>
+            <div class="feature-desc">Согласование, комментарии и роли — работайте вместе без хаоса в мессенджерах.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="features-visual reveal reveal-delay-2">
+        <div class="visual-card">
+          <div style="font-size:0.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:16px;">Аналитика за май</div>
+          <div class="analytics-row">
+            <div class="analytics-card">
+              <div class="analytics-label">Охват</div>
+              <div class="analytics-value accent">248K</div>
+              <div class="analytics-change up">↑ 18% к прошлому мес.</div>
+            </div>
+            <div class="analytics-card">
+              <div class="analytics-label">Вовлечённость</div>
+              <div class="analytics-value gold">6.4%</div>
+              <div class="analytics-change up">↑ 2.1% к прошлому мес.</div>
+            </div>
+            <div class="analytics-card">
+              <div class="analytics-label">Новых подписчиков</div>
+              <div class="analytics-value pos">+3 840</div>
+              <div class="analytics-change up">↑ 24%</div>
+            </div>
+            <div class="analytics-card">
+              <div class="analytics-label">Публикаций</div>
+              <div class="analytics-value" style="color:var(--text)">34</div>
+              <div class="analytics-change down">↓ 3 vs план</div>
+            </div>
+          </div>
+          <div class="chart-area">
+            <div class="chart-head">
+              <span class="chart-title">Охват по дням</span>
+              <span class="chart-period">Последние 30 дней</span>
+            </div>
+            <svg class="chart-svg" viewBox="0 0 320 80" fill="none">
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#FF4D6D" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="#FF4D6D" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0 60 C20 55, 40 45, 60 48 C80 51, 100 30, 120 28 C140 26, 160 40, 180 35 C200 30, 220 15, 240 18 C260 21, 280 25, 320 20 L320 80 L0 80 Z" fill="url(#chartGrad)"/>
+              <path d="M0 60 C20 55, 40 45, 60 48 C80 51, 100 30, 120 28 C140 26, 160 40, 180 35 C200 30, 220 15, 240 18 C260 21, 280 25, 320 20" stroke="#FF4D6D" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="240" cy="18" r="4" fill="#FF4D6D"/>
+              <circle cx="240" cy="18" r="8" fill="#FF4D6D" opacity="0.2"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="steps-section" id="how">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <div class="section-label">Как это работает</div>
+    <h2 class="section-title reveal">Три шага до <em>идеального</em><br>контент-плана</h2>
+
+    <div class="steps-grid">
+      <div class="step-item reveal">
+        <div class="step-num">01</div>
+        <div class="step-icon">🔗</div>
+        <div class="step-name">Подключи соцсети</div>
+        <div class="step-desc">Авторизуйте аккаунты Instagram, ВКонтакте, Telegram и других платформ одним кликом. Никаких сложных настроек.</div>
+      </div>
+      <div class="step-item reveal reveal-delay-1">
+        <div class="step-num">02</div>
+        <div class="step-icon">✍️</div>
+        <div class="step-name">Создавай контент</div>
+        <div class="step-desc">Пишите посты вручную или доверьте это ИИ. Загружайте медиа, добавляйте хэштеги и выбирайте время публикации.</div>
+      </div>
+      <div class="step-item reveal reveal-delay-2">
+        <div class="step-num">03</div>
+        <div class="step-icon">🚀</div>
+        <div class="step-name">Публикуй и расти</div>
+        <div class="step-desc">Planify автоматически публикует в нужное время. Следите за статистикой и оптимизируйте стратегию по данным.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTEGRATIONS -->
+<section class="integrations-section">
+  <div style="max-width: 1000px; margin: 0 auto;">
+    <div class="section-label" style="justify-content: center">Интеграции</div>
+    <h2 class="section-title reveal" style="text-align:center">Работает<br>с вашими <em>платформами</em></h2>
+    <div class="integrations-grid reveal">
+      <div class="integ-item"><span class="integ-icon">📸</span> Instagram</div>
+      <div class="integ-item"><span class="integ-icon">💙</span> ВКонтакте</div>
+      <div class="integ-item"><span class="integ-icon">✈️</span> Telegram</div>
+      <div class="integ-item"><span class="integ-icon">🎵</span> TikTok</div>
+      <div class="integ-item"><span class="integ-icon">▶️</span> YouTube</div>
+      <div class="integ-item"><span class="integ-icon">📌</span> Pinterest</div>
+      <div class="integ-item"><span class="integ-icon">🐦</span> Twitter / X</div>
+      <div class="integ-item"><span class="integ-icon">💼</span> LinkedIn</div>
+      <div class="integ-item"><span class="integ-icon">🔵</span> Facebook</div>
+      <div class="integ-item"><span class="integ-icon">🟠</span> Одноклассники</div>
+      <div class="integ-item"><span class="integ-icon">📊</span> Google Analytics</div>
+      <div class="integ-item"><span class="integ-icon">🔔</span> Slack / Telegram Bot</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <div class="section-label">Тарифы</div>
+    <h2 class="section-title reveal">Честные цены,<br><em>без сюрпризов</em></h2>
+    <p class="section-sub reveal reveal-delay-1">14 дней бесплатно на любом тарифе. Карта не нужна.</p>
+
+    <div class="pricing-grid">
+      <div class="pricing-card reveal">
+        <div class="pricing-tier">Старт</div>
+        <div class="pricing-price"><span>₽</span>990</div>
+        <div class="pricing-period">/ месяц</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li>3 социальных аккаунта</li>
+          <li>30 постов в месяц</li>
+          <li>Базовая аналитика</li>
+          <li>1 пользователь</li>
+          <li class="no">ИИ-генерация текстов</li>
+          <li class="no">Командная работа</li>
+        </ul>
+        <button class="btn-pricing outline">Начать</button>
+      </div>
+
+      <div class="pricing-card popular reveal reveal-delay-1">
+        <div class="popular-badge">Популярный</div>
+        <div class="pricing-tier">Про</div>
+        <div class="pricing-price"><span>₽</span>2 490</div>
+        <div class="pricing-period">/ месяц</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li>10 социальных аккаунтов</li>
+          <li>Неограниченно постов</li>
+          <li>Полная аналитика</li>
+          <li>3 пользователя</li>
+          <li>ИИ-генерация текстов</li>
+          <li class="no">Белый лейбл</li>
+        </ul>
+        <button class="btn-pricing solid">Выбрать Про</button>
+      </div>
+
+      <div class="pricing-card reveal reveal-delay-2">
+        <div class="pricing-tier">Агентство</div>
+        <div class="pricing-price"><span>₽</span>6 990</div>
+        <div class="pricing-period">/ месяц</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li>Неограниченно аккаунтов</li>
+          <li>Неограниченно постов</li>
+          <li>Расширенная аналитика</li>
+          <li>Неограниченно команд</li>
+          <li>ИИ-генерация текстов</li>
+          <li>Белый лейбл и API</li>
+        </ul>
+        <button class="btn-pricing outline">Связаться</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi-section" id="reviews">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <div class="section-label">Отзывы</div>
+    <h2 class="section-title reveal">Что говорят<br>наши <em>клиенты</em></h2>
+
+    <div class="testi-grid">
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">«Planify сократил время на ведение соцсетей втрое. Теперь я трачу 2 часа в неделю вместо шести. ИИ-тексты — просто огонь.»</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:linear-gradient(135deg,#FF4D6D,#FF8FA3)">АМ</div>
+          <div>
+            <div class="testi-name">Анна Морозова</div>
+            <div class="testi-role">СММ-менеджер, @beauty.brand</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal reveal-delay-1">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">«Наша команда из 5 человек работает в одном окне. Никаких согласований в Telegram, никакого хаоса с версиями постов.»</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:linear-gradient(135deg,#C9A84C,#E8C96A)">ДК</div>
+          <div>
+            <div class="testi-name">Дмитрий Козлов</div>
+            <div class="testi-role">Руководитель агентства MediaFlow</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal reveal-delay-2">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">«Аналитика показала, что наши посты в пятницу вечером дают охват в 3 раза больше. Это изменило всю нашу стратегию.»</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:linear-gradient(135deg,#6450DC,#9980FA)">ЕС</div>
+          <div>
+            <div class="testi-name">Елена Соболева</div>
+            <div class="testi-role">Маркетолог, TechStartup.ru</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div style="position: relative; z-index: 2;">
+    <div class="section-label" style="justify-content: center">Начните сегодня</div>
+    <h2 class="section-title reveal">Ваш контент заслуживает<br><em>лучшего инструмента</em></h2>
+    <p class="section-sub reveal reveal-delay-1">Присоединяйтесь к 12 000+ команд, которые уже работают умнее.</p>
+    <div class="cta-actions reveal reveal-delay-2">
+      <a href="#" class="btn-primary" style="font-size:1rem; padding:18px 44px">
+        Начать бесплатно — 14 дней
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a href="#" class="logo">Plani<span>fy</span></a>
+      <p class="footer-tagline">СММ планнер нового поколения для команд и агентств.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Продукт</h4>
+        <ul>
+          <li><a href="#">Возможности</a></li>
+          <li><a href="#">Интеграции</a></li>
+          <li><a href="#">Цены</a></li>
+          <li><a href="#">Обновления</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Компания</h4>
+        <ul>
+          <li><a href="#">О нас</a></li>
+          <li><a href="#">Блог</a></li>
+          <li><a href="#">Карьера</a></li>
+          <li><a href="#">Контакты</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Поддержка</h4>
+        <ul>
+          <li><a href="#">Документация</a></li>
+          <li><a href="#">База знаний</a></li>
+          <li><a href="#">Статус сервиса</a></li>
+          <li><a href="#">Написать нам</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2025 Planify. Все права защищены.</span>
+    <div class="footer-socials">
+      <a href="#" class="social-btn">✈️</a>
+      <a href="#" class="social-btn">💙</a>
+      <a href="#" class="social-btn">📸</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+  });
+
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('button, a, .feature-item, .step-item, .integ-item, .testi-card').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '20px';
+      cursor.style.height = '20px';
+      ring.style.width = '52px';
+      ring.style.height = '52px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '12px';
+      cursor.style.height = '12px';
+      ring.style.width = '36px';
+      ring.style.height = '36px';
+    });
+  });
+
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => observer.observe(el));
+
+  // Theme toggle
+  const toggleBtn = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  const savedTheme = localStorage.getItem('planify-theme');
+  if (savedTheme === 'light') html.classList.add('light');
+
+  toggleBtn.addEventListener('click', () => {
+    html.classList.toggle('light');
+    localStorage.setItem('planify-theme', html.classList.contains('light') ? 'light' : 'dark');
+  });
+
+  // Feature item toggle
+  document.querySelectorAll('.feature-item').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+      document.querySelectorAll('.feature-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
