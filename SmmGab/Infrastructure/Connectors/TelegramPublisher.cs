@@ -186,14 +186,62 @@ public class TelegramPublisher : IPublisher
     {
         var sb = new StringBuilder();
         sb.Append($"<b>{EscapeHtml(title)}</b>");
-        
+
         if (!string.IsNullOrWhiteSpace(body))
         {
             sb.Append("\n\n");
-            sb.Append(EscapeHtml(body));
+            // Body comes from Quill editor as HTML — convert to Telegram-compatible HTML
+            sb.Append(ConvertQuillHtmlToTelegramHtml(body));
         }
-        
+
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Converts Quill-generated HTML to the subset of HTML supported by Telegram Bot API
+    /// (parse_mode=HTML). Telegram supports: &lt;b&gt;, &lt;i&gt;, &lt;u&gt;, &lt;s&gt;,
+    /// &lt;code&gt;, &lt;pre&gt;, &lt;a href&gt;. Block elements become newlines.
+    /// Text content is already HTML-escaped by Quill, so we only convert tags.
+    /// </summary>
+    private static string ConvertQuillHtmlToTelegramHtml(string html)
+    {
+        if (string.IsNullOrWhiteSpace(html)) return "";
+
+        // Headings → <b> + newline
+        html = Regex.Replace(html, @"<h[1-6](?:\s[^>]*)?>", "<b>", RegexOptions.IgnoreCase);
+        html = Regex.Replace(html, @"</h[1-6]>", "</b>\n", RegexOptions.IgnoreCase);
+
+        // <strong> → <b>, <em> → <i>
+        html = Regex.Replace(html, @"<strong(?:\s[^>]*)?>", "<b>", RegexOptions.IgnoreCase);
+        html = Regex.Replace(html, @"</strong>", "</b>", RegexOptions.IgnoreCase);
+        html = Regex.Replace(html, @"<em(?:\s[^>]*)?>", "<i>", RegexOptions.IgnoreCase);
+        html = Regex.Replace(html, @"</em>", "</i>", RegexOptions.IgnoreCase);
+
+        // List items
+        html = Regex.Replace(html, @"<li(?:\s[^>]*)?>", "\n• ", RegexOptions.IgnoreCase);
+        html = Regex.Replace(html, @"</li>", "", RegexOptions.IgnoreCase);
+        html = Regex.Replace(html, @"<[uo]l(?:\s[^>]*)?>", "", RegexOptions.IgnoreCase);
+        html = Regex.Replace(html, @"</[uo]l>", "\n", RegexOptions.IgnoreCase);
+
+        // <br> → newline
+        html = Regex.Replace(html, @"<br\s*/?>", "\n", RegexOptions.IgnoreCase);
+
+        // Block elements: closing tag → newline, opening tag → strip
+        html = Regex.Replace(html, @"</(?:p|div|blockquote|section)>", "\n", RegexOptions.IgnoreCase);
+        html = Regex.Replace(html, @"<(?:p|div|blockquote|section)(?:\s[^>]*)?>", "", RegexOptions.IgnoreCase);
+
+        // Strip any remaining tags that Telegram does NOT support
+        // Keep: b, i, u, s, code, pre, a (with href attribute)
+        html = Regex.Replace(
+            html,
+            @"<(?!/?(?:b|i|u|s|code|pre|a)(?:\s|>|/))[^>]+>",
+            "",
+            RegexOptions.IgnoreCase);
+
+        // Normalize excessive newlines
+        html = Regex.Replace(html, @"\n{3,}", "\n\n");
+
+        return html.Trim();
     }
 
     private string EscapeHtml(string text)
