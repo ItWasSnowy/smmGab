@@ -140,6 +140,11 @@ static void CreateDatabaseIfNotExists(string? connectionString)
 
     var builder = new NpgsqlConnectionStringBuilder(connectionString);
 
+    if (string.IsNullOrWhiteSpace(builder.Database))
+    {
+        throw new InvalidOperationException("Database name is not specified in the connection string.");
+    }
+
     // Connect to the maintenance database to issue CREATE DATABASE
     var adminBuilder = new NpgsqlConnectionStringBuilder(connectionString)
     {
@@ -151,7 +156,7 @@ static void CreateDatabaseIfNotExists(string? connectionString)
 
     using var cmd = connection.CreateCommand();
     cmd.CommandText = $"SELECT 1 FROM pg_database WHERE datname = @dbName";
-    cmd.Parameters.AddWithValue("dbName", builder.Database);
+    cmd.Parameters.AddWithValue("dbName", builder.Database!);
 
     var exists = cmd.ExecuteScalar() is not null;
     if (!exists)
